@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 env:
-  PUSH: ${{ (github.event_name != 'pull_request') && (github.repository == 'robotic-decision-making-lab/ros-template') }}
+  PUSH: ${{ (github.event_name != 'pull_request') && (github.repository == 'robotic-decision-making-lab/underwater_docking') }}
 
 jobs:
   ci:
@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         ROS_DISTRO: [noetic]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     permissions:
       packages: write
       contents: read
@@ -60,7 +60,7 @@ jobs:
       fail-fast: false
       matrix:
         ROS_DISTRO: [noetic]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     permissions:
       packages: write
       contents: read
@@ -108,7 +108,7 @@ jobs:
       fail-fast: false
       matrix:
         ROS_DISTRO: [noetic]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     permissions:
       packages: write
       contents: read
@@ -149,7 +149,7 @@ jobs:
       fail-fast: false
       matrix:
         ROS_DISTRO: [noetic]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     permissions:
       packages: write
       contents: read

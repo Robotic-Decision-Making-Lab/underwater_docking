@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:macro name="bluerov2_heavy_urdf">
+
+    <link name="base_footprint" />
+
+    <link name="base_link" />
+
+    <joint name="base_footprint_joint" type="fixed">
+      <parent link="base_footprint" />
+      <child link="base_link" />
+    </joint>
+
+    <link name="camera_link" />
+  
+    <joint name="camera_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="camera_link"/>
+      <origin rpy="-1.571 0 -1.571" xyz="0.21 0 0.067" />
+      <!-- <origin rpy="3.142 0 1.571" xyz="0 0.21 -0.067"/> -->
+      <!-- <axis xyz="0 0 1" /> -->
+    </joint>
+
+    <!-- Import T200 macro -->
+    <xacro:include filename="$(find bluerov2_dock)/model/t200/urdf.xacro" />
+
+    <xacro:t200_urdf parent="base_link" ccw="true" id="1">
+      <origin rpy="-1.571 1.571 -0.785" xyz="0.14 -0.092 0.0" />
+    </xacro:t200_urdf>
+
+    <xacro:t200_urdf parent="base_link" ccw="true" id="2">
+      <origin rpy="-1.571 1.571 -2.356" xyz="0.14 0.092 0.0" />
+    </xacro:t200_urdf>
+
+    <xacro:t200_urdf parent="base_link" ccw="false" id="3">
+      <origin rpy="-1.571 1.571 0.785" xyz="-0.15 -0.092 0.0" />
+    </xacro:t200_urdf>
+
+    <xacro:t200_urdf parent="base_link" ccw="false" id="4">
+      <origin rpy="-1.571 1.571 2.356" xyz="-0.15 0.092 0.0" />
+    </xacro:t200_urdf>
+
+    <xacro:t200_urdf parent="base_link" ccw="true" id="5">
+      <origin rpy="0 0 0" xyz="0.118 -0.215 0.064" />
+    </xacro:t200_urdf>
+
+    <xacro:t200_urdf parent="base_link" ccw="false" id="6">
+      <origin rpy="0 0 0" xyz="0.118 0.215 0.064" />
+    </xacro:t200_urdf>
+
+    <xacro:t200_urdf parent="base_link" ccw="false" id="7">
+      <origin rpy="0 0 0" xyz="-0.118 -0.215 0.064" />
+    </xacro:t200_urdf>
+
+    <xacro:t200_urdf parent="base_link" ccw="true" id="8">
+      <origin rpy="0 0 0" xyz="-0.118 0.215 0.064" />
+    </xacro:t200_urdf>
+
+  </xacro:macro>
+</robot>

@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<robot name="bluerov2_heavy" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- Import BlueROV2 macro -->
+  <xacro:include
+    filename="$(find bluerov2_dock)/model/bluerov2_heavy/urdf.xacro" />
+  <xacro:bluerov2_heavy_urdf/>
+
+</robot>

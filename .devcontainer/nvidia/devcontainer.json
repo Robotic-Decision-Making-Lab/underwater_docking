@@ -1,9 +1,9 @@
 {
-  "name": "ROS NVIDIA Dev Container",
+  "name": "nvidia",
   "dockerFile": "Dockerfile",
   "context": "../..",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/home/ros/ws_ros/src/ros-template,type=bind",
-  "workspaceFolder": "/home/ros/ws_ros/src/ros-template",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/ros/ws_dock/src/underwater_docking,type=bind",
+  "workspaceFolder": "/home/ros/ws_dock/src/underwater_docking",
   "remoteUser": "ros",
   "runArgs": [
     "--network=host",

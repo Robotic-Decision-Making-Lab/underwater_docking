@@ -5,4 +5,4 @@
 !requirements-dev.txt
 
 # Allow your ROS packages here, e.g.:
-!example_pkg
+!bluerov2_docking

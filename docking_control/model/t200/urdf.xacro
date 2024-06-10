@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:macro name="t200_urdf" params="id parent *origin ccw:=^false">
+
+    <link name="thruster${id}" />
+
+    <joint name="thruster${id}_joint" type="continuous">
+      <xacro:insert_block name="origin" />
+      <parent link="${parent}" />
+      <child link="thruster${id}" />
+      <axis xyz="0 0 -1" />
+      <limits effort="-1" velocity="-1" />
+    </joint>
+
+  </xacro:macro>
+</robot>

@@ -2,10 +2,10 @@ ARG ROS_DISTRO=noetic
 FROM ros:$ROS_DISTRO-ros-base as ci
 
 ENV DEBIAN_FRONTEND=noninteractive
-WORKDIR /root/ws_ros
+WORKDIR /root/ws_dock
 
 # Update to be your project's name
-ENV PROJECT_NAME=ros-template
+ENV PROJECT_NAME=underwater_docking
 
 COPY . src/$PROJECT_NAME
 
@@ -21,6 +21,14 @@ RUN apt-get -q update \
     clang-tools \
     python3-pip \
     python3-dev \
+    python3-rosdep \
+    python3-rosinstall \
+    python3-rosinstall-generator \
+    python3-wstool \
+    python3-catkin-tools \
+    build-essential \
+    nano \
+    vim \
     apt-utils \
     software-properties-common \
     && apt-get autoremove -y \
@@ -56,13 +64,36 @@ USER $USERNAME
 ENV USER=$USERNAME
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV USER_WORKSPACE=/home/$USERNAME/ws_ros
-WORKDIR $USER_WORKSPACE
 
+# Install MAVROS dependencies
+WORKDIR /home/$USERNAME
+RUN wget https://raw.githubusercontent.com/mavlink/mavros/ros2/mavros/scripts/install_geographiclib_datasets.sh \
+    && chmod +x install_geographiclib_datasets.sh \
+    && sudo ./install_geographiclib_datasets.sh
+
+# Install acados
+WORKDIR /home/$USERNAME
+RUN git clone https://github.com/acados/acados.git \
+    && cd acados \
+    && git submodule update --recursive --init \
+    && mkdir -p build \
+    && cd build \
+    && cmake -DACADOS_WITH_QPOASES=ON -DACADOS_WITH_OSQP=ON ..\
+    && make install -j4
+
+# Install acados python interface
+WORKDIR /home/$USERNAME
+RUN pip install -e /home/$USERNAME/acados/interfaces/acados_template \
+    && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/home/$USERNAME/acados/lib" \
+    && export ACADOS_SOURCE_DIR="/home/$USERNAME/acados"
+
+
+ENV USER_WORKSPACE=/home/$USERNAME/ws_dock
+WORKDIR $USER_WORKSPACE
 COPY --chown=$USER_UID:$USER_GID . src/$PROJECT_NAME
 
 # Uncomment to download and install external repos used by the project
-# RUN vcs import src < src/$PROJECT_NAME/ros2.repos
+# RUN vcs import src < src/$PROJECT_NAME/ros.repos
 
 # Install all ROS dependencies
 WORKDIR $USER_WORKSPACE
@@ -83,16 +114,16 @@ RUN . "/opt/ros/${ROS_DISTRO}/setup.sh" \
 FROM robot as desktop
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV USER_WORKSPACE=/home/$USERNAME/ws_ros
+ENV USER_WORKSPACE=/home/$USERNAME/ws_dock
 WORKDIR $USER_WORKSPACE
 
-# Install Gazebo packages
+# Install Gazebo and RViz
 RUN sudo apt-get update \
     && sudo apt-get -q -y upgrade \
     && curl -sSL http://get.gazebosim.org | sh \
     && sudo apt-get -q install --no-install-recommends -y \
-    ros-$ROS_DISTRO-gazebo-ros-pkgs \
-    ros-$ROS_DISTRO-gazebo-ros-control \
+    ros-$ROS_DISTRO-gazebo* \
+    ros-$ROS_DISTRO-rviz \
     && sudo apt-get autoremove -y \
     && sudo apt-get clean -y \
     && sudo rm -rf /var/lib/apt/lists/*

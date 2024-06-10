@@ -2,3 +2,9 @@
 devel
 install
 log
+
+*.tar.gz
+*.png
+*.pyc
+*.bag
+.DS_Store

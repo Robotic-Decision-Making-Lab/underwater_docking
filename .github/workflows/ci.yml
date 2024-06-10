@@ -13,7 +13,7 @@ env:
 jobs:
   test:
     name: Test Implementation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     strategy:
       fail-fast: false
@@ -37,7 +37,7 @@ jobs:
       - name: Run ROS Industrial CI
         uses: ros-industrial/industrial_ci@master
         env:
-          DOCKER_IMAGE: ghcr.io/robotic-decision-making-lab/ros-template:${{ matrix.env.IMAGE }}
+          DOCKER_IMAGE: ghcr.io/robotic-decision-making-lab/underwater_docking:${{ matrix.env.IMAGE }}
           CXXFLAGS: >-
             -Wall -Wextra -Wpedantic -Wwrite-strings -Wunreachable-code -Wpointer-arith -Wredundant-decls
           CC: ${{ env.CLANG_TIDY && 'clang' }}

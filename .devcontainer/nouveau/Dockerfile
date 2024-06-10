@@ -1,10 +1,10 @@
-FROM ghcr.io/robotic-decision-making-lab/ros-template:noetic-desktop
+FROM ghcr.io/robotic-decision-making-lab/underwater_docking:noetic-desktop
 
 # Install ROS dependencies
 # This is done in a previous stage, but we include it again here in case anyone wants to
 # add new dependencies during development
 ENV USERNAME=ros
-ENV USER_WORKSPACE=/home/$USERNAME/ws_ros
+ENV USER_WORKSPACE=/home/$USERNAME/ws_dock
 WORKDIR $USER_WORKSPACE
 
 COPY --chown=$USER_UID:$USER_GID . src/$PROJECT_NAME
