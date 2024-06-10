@@ -30,6 +30,7 @@ RUN apt-get -q update \
     nano \
     vim \
     apt-utils \
+    wget \
     software-properties-common \
     && apt-get autoremove -y \
     && apt-get clean -y \
