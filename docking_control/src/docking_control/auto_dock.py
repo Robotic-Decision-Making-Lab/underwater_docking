@@ -3,7 +3,9 @@ import time
 import numpy as np
 import rospy
 
-# sys.path.insert(0, '/home/darth/workspace/bluerov2_ws/src/bluerov2_dock/src/bluerov2_dock')
+# sys.path.insert(
+#     0, "/home/darth/workspace/bluerov2_ws/src/bluerov2_dock/src/bluerov2_dock"
+# )
 
 from auv_hinsdale import AUV
 
@@ -58,7 +60,7 @@ class MPControl:
         self.opt_data = {}
 
     def compute_wave_number(self, g, h, T):
-        """This function computes the wave number for a given wave period and water depth.
+        """Computes the wave number for a given wave period and water depth.
 
         Args:
             g: aceeleration due to gravity
@@ -178,7 +180,7 @@ class MPControl:
             self.comp_time = time.perf_counter() - process_t0
 
             print(
-                f"T = {round(self.t_span[self.time_id],3)}s, Time Index = {self.time_id}"
+                f"T = {round(self.t_span[self.time_id],3)}s"
             )
             print(f"Computation Time = {round(self.comp_time,3)}s")
             print("----------------------------------------------")

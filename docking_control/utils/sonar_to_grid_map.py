@@ -109,11 +109,14 @@ def generate_ray_casting_grid_map(ox, oy, xy_resolution):
         # y coordinate of the the occupied area
         iy = int(np.floor((y - min_y) / xy_resolution))
 
-        # laser_beams = bresenham((center_x, center_y), (ix, iy))  # line form the lidar to the occupied point
+        # laser_beams = bresenham((center_x, center_y), (ix, iy))
         # for laser_beam in laser_beams:
-        #     if laser_beam[0] < occupancy_map.shape[0] and laser_beam[1] < occupancy_map.shape[1]:
+        #     if (
+        #         laser_beam[0] < occupancy_map.shape[0]
+        #         and laser_beam[1] < occupancy_map.shape[1]
+        #     ):
         #         if occupancy_map[laser_beam[0]][laser_beam[1]] != 1.0:
-        #             occupancy_map[laser_beam[0]][laser_beam[1]] = 0.0  # free area 0.0
+        #             occupancy_map[laser_beam[0]][laser_beam[1]] = 0.0
 
         if ix < max_x:
             occupancy_map[ix + 1][iy] = 1.0  # extend the occupied area

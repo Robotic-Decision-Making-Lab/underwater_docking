@@ -6,18 +6,7 @@ import numpy as np
 import sys
 import pandas as pd
 import os
-
-sys.path.insert(
-    0, "/home/darth/workspace/bluerov2_ws/src/bluerov2_dock/src/bluerov2_dock"
-)
-
-try:
-    pass
-except BaseException:
-    pass
-
 from auto_dock import MPControl
-
 from std_msgs.msg import Float32MultiArray, MultiArrayDimension
 from geometry_msgs.msg import PoseStamped, WrenchStamped
 from sensor_msgs.msg import Joy, BatteryState, FluidPressure
@@ -90,7 +79,6 @@ class BlueROV2:
     def load_pwm_lookup(self):
         """Load the lookup table for converting thrust to pwm values"""
         cwd = os.path.dirname(__file__)
-        # csv = pd.read_csv("/home/darth/workspace/bluerov2_ws/src/bluerov2_dock/data/T200_data_16V.csv")
         csv = pd.read_csv(cwd + "/../../data/T200_data_16V.csv")
 
         thrust_vals = csv["Force"].tolist()
@@ -129,11 +117,15 @@ class BlueROV2:
         self.rov_pose_sub = rospy.Subscriber(
             "/bluerov2_dock/vision_pose/pose", PoseStamped, self.rov_pose_cb
         )
-        # self.rov_vel_sub = rospy.Subscriber('/mavros/local_position/velocity_body', TwistStamped, self.rov_vel_cb)
+        # self.rov_vel_sub = rospy.Subscriber(
+        #     "/mavros/local_position/velocity_body", TwistStamped, self.rov_vel_cb
+        # )
 
     def initialize_publishers(self):
         # Set up publishers
-        # self.control_pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=1)
+        # self.control_pub = rospy.Publisher(
+        #     "/mavros/rc/override", OverrideRCIn, queue_size=1
+        # )
         self.control_pub = rospy.Publisher(
             "/bluerov2_dock/pwm", OverrideRCIn, queue_size=1
         )
@@ -188,12 +180,6 @@ class BlueROV2:
         Args:
             pose: PoseStamped message
         """
-
-        # try:
-        #     pose = self.tf_buffer.transform(data, "map_ned")
-        # except TransformException as e:
-        #     rospy.logwarn("[BlueROV2][rov_pose_cb] Could not transform pose data from map to map_ned: {}".format(e))
-        #     return
 
         try:
             x = pose.pose.orientation.x
@@ -323,23 +309,23 @@ class BlueROV2:
 
         except Exception:
             rospy.logerr_throttle(
-                10,
-                "[BlueROV2][thrust_to_pwm] Error in thrust to pwm conversion. Setting neutral pwm",
+                10, "[BlueROV2][thrust_to_pwm] Error in thrust to pwm conversion."
             )
             pwm = [self.neutral_pwm for _ in range(8)]
 
         return pwm
 
     def calculate_pwm_from_thrust_curve(self, force):
-        # The thrust curve is only accurate over the following force range, so we restrict the input
-        # forces to that range
+        # The thrust curve is only accurate over the following force range,
+        # so we restrict the input forces to that range
         min_force = -40.0
         max_force = 60.0
 
         force = np.clip(force, min_force, max_force)
 
-        # Coefficients for the 4th-degree polynomial fit to the thrust curve for the T200 run using
-        # a battery at 18v. The polynomial was identified using Matlab's `fit` function.
+        # Coefficients for the 4th-degree polynomial fit to the
+        # thrust curve for the T200 run using a battery at 18v.
+        # The polynomial was identified using Matlab's `fit` function.
         p00 = 1498
         p01 = 12.01
         p02 = -0.04731
@@ -401,9 +387,13 @@ class BlueROV2:
                     )
                     self.auto_control(joy)
                 else:
+                    msg = """
+                    [BlueROV2][controller] Unable to switch to
+                    RC Passthrough mode. Cannot enable AUTO mode!
+                    """
                     rospy.logwarn_throttle(
                         10,
-                        "[BlueROV2][controller] Unable to switch to RC Passthrough mode. Cannot enable AUTO mode!",
+                        msg,
                     )
                     self.mode_flag = "manual"
             else:
@@ -449,9 +439,13 @@ class BlueROV2:
         try:
             forces, wrench, converge_flag = self.mpc.run_mpc(x0, xr)
             if converge_flag:
+                msg = """
+                [BlueROV2][auto_control] ROV reached dock successfully!
+                Disarming now...
+                """
                 rospy.loginfo_throttle(
                     10,
-                    "[BlueROV2][auto_control] ROV reached dock successfully! Disarming now...",
+                    msg,
                 )
                 response = self.rc_passthrough_srv(False)
                 self.rc_passthrough_flag = False
@@ -514,8 +508,9 @@ class BlueROV2:
 
         self.mpc.mpc.reset()
 
-        # Create a copy of axes as a list instead of a tuple so you can modify the values
-        # The RCOverrideOut message type also expects a list
+        # Create a copy of axes as a list instead of a tuple so you can
+        # modify the values.
+        # RCOverrideOut message type also expects a list
         temp_axes = list(axes)
         temp_axes[3] *= -1  # fixes reversed yaw axis
         temp_axes[0] *= -1  # fixes reversed lateral L/R axis
@@ -548,7 +543,6 @@ class BlueROV2:
 
         self.light_level = override[8]
 
-        # rospy.loginfo("[BlueROV2][manual_control] Joy PWM Values: {}".format(override[0:9]))
         # Send joystick data as rc output into rc override topic
         self.control_pub.publish(override)
 

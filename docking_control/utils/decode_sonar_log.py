@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 
-import struct, sys, re
-
-# 3.7 for dataclasses, 3.8 for walrus (:=) in recovery
-assert (
-    sys.version_info.major >= 3 and sys.version_info.minor >= 8
-), "Python version should be at least 3.8."
-
+import struct
+import sys
+import re
 from brping import PingParser
 from dataclasses import dataclass
 from typing import IO, Any, Set
@@ -292,17 +288,17 @@ if __name__ == "__main__":
                 intensities = np.array(list((itertools.chain(*intensities))))
                 angles = np.array(list((itertools.chain(*angles))))
 
-                for l in range(len(ranges)):
-                    if ranges[l] <= 5.5:
-                        intensities[l] = 0.0
+                for i in range(len(ranges)):
+                    if ranges[i] <= 5.5:
+                        intensities[i] = 0.0
 
                 dis = []
                 ang = []
 
-                for l in range(len(ranges)):
-                    if intensities[l] > 50.0:
-                        dis.append(ranges[l])
-                        ang.append(angles[l])
+                for i in range(len(ranges)):
+                    if intensities[i] > 50.0:
+                        dis.append(ranges[i])
+                        ang.append(angles[i])
 
                 dis = np.array(dis)
                 ang = np.array(ang)

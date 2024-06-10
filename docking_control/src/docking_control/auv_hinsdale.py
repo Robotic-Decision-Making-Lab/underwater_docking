@@ -42,7 +42,8 @@ class AUV(object):
         self.ocean_current_data = []
         self.nu_w = np.zeros((6, 1))
 
-        # Precompute the total mass matrix (w/added mass) inverted for future dynamic calls
+        # Precompute the total mass matrix (w/added mass) inverted
+        # for future dynamic calls
         self.mass_inv = inv(self.rb_mass + self.added_mass)
         self.rb_mass_inv = inv(self.rb_mass)
         self.added_mass_inv = inv(self.added_mass)
@@ -52,7 +53,7 @@ class AUV(object):
         f = open(filename, "r")
         params = yaml.load(f.read(), Loader=yaml.SafeLoader)
 
-        l = params["l"]
+        length = params["l"]
         m = params["m"]
         Ixx = params["Ixx"]
         Iyy = params["Iyy"]
@@ -67,7 +68,7 @@ class AUV(object):
         rb_mass[3:6, 0:3] = m * skew_r_gb
 
         vehicle_dynamics = {}
-        vehicle_dynamics["vehicle_length"] = l
+        vehicle_dynamics["vehicle_length"] = length
         vehicle_dynamics["vehicle_mass"] = m
         vehicle_dynamics["rb_mass"] = rb_mass
         vehicle_dynamics["added_mass"] = -diag(SX(params["m_added"]))
@@ -86,8 +87,8 @@ class AUV(object):
         return cls(vehicle_dynamics)
 
     def compute_transformation_matrix(self, x):
-        """This function computes the transformation matrix from Body to NED frame
-        based on Fossen's book.
+        """This function computes the transformation matrix from Body to Inertial
+        frame based on Fossen's book.
 
         Args:
             x: vehicle pose 6 dof
@@ -262,7 +263,7 @@ class AUV(object):
         eta = x[0:6, :]
         nu_r = x[6:12, :]
 
-        # Gets the transformation matrix to convert from Body to NED frame
+        # Gets the transformation matrix to convert from Body to Inretial frame
         tf_mtx = self.compute_transformation_matrix(eta)
         inv(tf_mtx)
 
@@ -270,9 +271,6 @@ class AUV(object):
         nu_c = vertcat(f_B, SX.zeros((3, 1)))
         # nu_c = vertcat(f, SX.zeros(3,1))
         # nu_c_dot = SX.zeros((6,1))
-
-        # Converts ocean current disturbances to Body frame
-        # nu_c = mtimes(tf_mtx_inv, nu_c_ned)
 
         # Computes total vehicle velocity
         nu = nu_r + nu_c
@@ -286,10 +284,6 @@ class AUV(object):
         # nu_c_dot = jacobian(nu_c, t)
 
         # Kinematic Equation
-        # Convert the relative velocity from Body to NED and add it with the
-        # ocean current velocity in NED to get the total velocity of the vehicle in NED
-
-        # eta_dot = mtimes(tf_mtx, nu_r) + nu_c_ned
         eta_dot = if_else(
             complete_model, mtimes(tf_mtx, (nu_r + nu_c)), mtimes(tf_mtx, nu_r)
         )

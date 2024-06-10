@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
 import gi
-import numpy as np
-import rospy
-from cv_bridge import CvBridge
-
-from sensor_msgs.msg import Image
 
 gi.require_version("Gst", "1.0")
 from gi.repository import Gst
+
+import numpy as np
+import rospy
+from cv_bridge import CvBridge
+from sensor_msgs.msg import Image
 
 
 class Video:
@@ -50,17 +50,21 @@ class Video:
         self.video_source = "udpsrc port={}".format(self.port)
 
         # RTSP video stream
-        # self.video_source = 'rtspsrc location=rtsp://192.168.2.2:8554/video_stream__dev_video2 latency=0'
+        # self.video_source = "rtspsrc location=rtsp://192.168.2.2:8554/" + \
+        #     "video_stream__dev_video2 latency=0"
 
         # [Rasp raw image](http://picamera.readthedocs.io/en/release-0.7/recipes2.html#raw-image-capture-yuv-format)
         # Cam -> CSI-2 -> H264 Raw (YUV 4-4-4 (12bits) I420)
         self.video_codec = (
             "! application/x-rtp, payload=96 ! rtph264depay ! h264parse ! avdec_h264"
         )
-        # self.video_codec = '! application/x-rtp, payload=96 ! rtph264depay ! h264parse ! v4l2h264dec'
+        # self.video_codec = (
+        #     "! application/x-rtp, payload=96 ! rtph264depay ! h264parse ! v4l2h264dec"
+        # )
         # self.video_codec = '! application/x-rtp, payload=96 ! rtpjpegdepay ! jpegdec'
 
-        # Python don't have nibble, convert YUV nibbles (4-4-4) to OpenCV standard BGR bytes (8-8-8)
+        # Python don't have nibble, convert YUV nibbles (4-4-4) to
+        # OpenCV standard BGR bytes (8-8-8)
         self.video_decode = "! videoconvert ! video/x-raw,format=(string)BGR"
 
         # Create a sink to get data

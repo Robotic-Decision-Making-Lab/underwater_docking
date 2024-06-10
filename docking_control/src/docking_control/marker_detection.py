@@ -46,7 +46,9 @@ ARUCO_DICT = {
 
 class Aruco:
     def __init__(self):
-        """This class is used to detect ArUco markers and estimate the pose of the ROV."""
+        """This class is used to detect ArUco markers and estimate the pose
+        of the ROV.
+        """
         self.desired_markers = [2, 7, 8, 9, 10, 11]
         # self.desired_markers = [1, 4]
 
@@ -138,8 +140,8 @@ class Aruco:
         def isRotationMatrix(R):
             Rt = np.transpose(R)
             shouldBeIdentity = np.dot(Rt, R)
-            I = np.identity(3, dtype=R.dtype)
-            n = np.linalg.norm(I - shouldBeIdentity)
+            mat_eye = np.identity(3, dtype=R.dtype)
+            n = np.linalg.norm(mat_eye - shouldBeIdentity)
             return n < 1e-6
 
         assert isRotationMatrix(R)
@@ -230,11 +232,6 @@ class Aruco:
                 frame, des_marker_corners, detected_marker_ids
             )
 
-            # if detected_marker_ids.shape[0] > 0:
-            #     print(detected_marker_ids.shape)
-            #     print(des_marker_corners.shape)
-            #     print("Desired markers are present")
-
             # Marker Pose Estimation
             i = 0
             if detected_marker_ids.shape[0] > 0:
@@ -242,9 +239,6 @@ class Aruco:
                 marker_id = detected_marker_ids[i]
                 marker_id_str = "marker_{0}".format(marker_id)
                 marker_size = self.marker_size[marker_id]
-                # rospy.logwarn(f"{marker_id} was detected and is used to estimate pose")
-                # print(i)
-                # rospy.loginfo("[Aruco][marker_detection] Markers detected")
 
                 marker_points = np.array(
                     [
@@ -262,8 +256,6 @@ class Aruco:
 
                 rvec = np.array(rvec).T
                 tvec = np.array(tvec).T
-
-                # rospy.logwarn(f"Rotation: {rvec} \n Translation: {tvec}")
 
                 # Calculates rodrigues matrix
                 rmat, _ = cv2.Rodrigues(rvec)
@@ -286,18 +278,6 @@ class Aruco:
                 tf_cam_to_marker.transform.rotation.y = quat[1]
                 tf_cam_to_marker.transform.rotation.z = quat[2]
                 tf_cam_to_marker.transform.rotation.w = quat[3]
-
-                # self.tf_broadcaster.sendTransform(tf_cam_to_marker)
-
-                # rospy.loginfo(f"TF between camera_link and {marker_id_str} was broadcasted")
-                # rospy.logwarn(f"TF between cam and marker: {tf_cam_to_marker}")
-
-                # # transform lookup: base_link -> map
-                # try:
-                #     tf_base_to_map = self.tf_buffer.lookup_transform("map", "base_link", rospy.Time())
-                # except TransformException as e:
-                #     rospy.logwarn("[Aruco][marker_detection] Transform unavailable: {0}".format(e))
-                #     return
 
                 # transform lookup: base_link -> camera_link
                 try:
@@ -352,30 +332,12 @@ class Aruco:
                     pose.pose.orientation.w = quat[3]
                     return pose
 
-                # tf_base_to_map = transform_to_arr(tf_base_to_camera) @ transform_to_arr(tf_cam_to_marker) @ transform_to_arr(tf_marker_to_map)
                 tf_base_to_marker = transform_to_arr(
                     tf_base_to_camera
                 ) @ transform_to_arr(tf_cam_to_marker)
-                # rospy.logwarn(f"TF base->camera: {tf_base_to_camera}")
-                # rospy.logwarn(f"TF camera-> marker: {tf_cam_to_marker}")
-                # rospy.logwarn(f"TF base->marker: {tf_base_to_marker}")
                 tf_base_to_map = tf_base_to_marker @ transform_to_arr(tf_marker_to_map)
-                # rospy.logwarn(f"TF marker->map: {tf_marker_to_map}")
-                # rospy.logwarn(f"TF base->map: {tf_base_to_map}")
 
                 rov_pose = arr_to_pose(np.linalg.inv(tf_base_to_map), "map")
-                # rospy.logwarn(f"Not reaching here")
-
-                # rov_pose = PoseStamped()
-                # rov_pose.header.frame_id = "map"
-                # rov_pose.header.stamp = rospy.Time.now()
-                # rov_pose.pose.position.x = tf_base_to_map.transform.translation.x
-                # rov_pose.pose.position.y = tf_base_to_map.transform.translation.y
-                # rov_pose.pose.position.z = tf_base_to_map.transform.translation.z
-                # rov_pose.pose.orientation.x = tf_base_to_map.transform.rotation.x
-                # rov_pose.pose.orientation.y = tf_base_to_map.transform.rotation.y
-                # rov_pose.pose.orientation.z = tf_base_to_map.transform.rotation.z
-                # rov_pose.pose.orientation.w = tf_base_to_map.transform.rotation.w
 
                 rov_orientation = R.from_quat(
                     [
@@ -425,10 +387,7 @@ class Aruco:
                 rov_pose.pose.orientation.z = quat[2]
                 rov_pose.pose.orientation.w = quat[3]
 
-                # rospy.loginfo("[Aruco][marker_detection] ROV Pose: {0}".format(rov_pose))
-                # rospy.logwarn(f"Pose: {rov_pose}")
                 self.vision_pose_pub.publish(rov_pose)
-                # rospy.logwarn("Published")
 
         cv2.circle(
             frame,
