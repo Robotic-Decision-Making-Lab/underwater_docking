@@ -99,12 +99,8 @@ def generate_ray_casting_grid_map(ox, oy, xy_resolution):
     occupancy_map = np.zeros((x_w, y_w))
     # occupancy_map = np.ones((x_w, y_w)) / 2
 
-    int(
-        np.floor(-min_x / xy_resolution)
-    )  # center x coordinate of the grid map
-    int(
-        np.floor(-min_y / xy_resolution)
-    )  # center y coordinate of the grid map
+    int(np.floor(-min_x / xy_resolution))  # center x coordinate of the grid map
+    int(np.floor(-min_y / xy_resolution))  # center y coordinate of the grid map
 
     # occupancy grid computed with bresenham ray casting
     for x, y in tqdm(zip(ox, oy), total=len(ox)):
