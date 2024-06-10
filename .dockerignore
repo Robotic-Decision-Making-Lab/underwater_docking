@@ -1,0 +1,8 @@
+# ignore everything
+*
+
+# Except the following
+!requirements-dev.txt
+
+# Allow your ROS packages here, e.g.:
+!example_pkg
