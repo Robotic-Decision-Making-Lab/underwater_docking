@@ -96,6 +96,22 @@ COPY --chown=$USER_UID:$USER_GID . src/$PROJECT_NAME
 # Uncomment to download and install external repos used by the project
 # RUN vcs import src < src/$PROJECT_NAME/ros.repos
 
+# Install gstreamer
+RUN sudo apt-get -q update \
+    && sudo apt-get -q -y upgrade \
+    && sudo apt-get -q install --no-install-recommends -y \
+    python3-gi \
+    gstreamer1.0-tools \
+    gir1.2-gstreamer-1.0 \
+    gir1.2-gst-plugins-base-1.0 \
+    gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-ugly \
+    gstreamer1.0-plugins-bad \
+    gstreamer1.0-libav \
+    && sudo apt-get autoremove -y \
+    && sudo apt-get clean -y \
+    && sudo rm -rf /var/lib/apt/lists/*
+
 # Install all ROS dependencies
 WORKDIR $USER_WORKSPACE
 RUN sudo apt-get -q update \

@@ -1,6 +1,6 @@
 import yaml
 import numpy as np
-from casadi import DM, SX, Function, integrator, Opti, evalf, mtimes, vertcat, exp, pinv
+from casadi import SX, Function, integrator, Opti, evalf, mtimes, vertcat, pinv
 import sys
 
 sys.path.insert(
@@ -100,7 +100,7 @@ class MPC(object):
         # f_B_dot = DM.zeros((3,1))
 
         tf_B2I = self.auv.compute_transformation_matrix(eta)
-        R_B2I = evalf(tf_B2I[0:3, 0:3])
+        evalf(tf_B2I[0:3, 0:3])
 
         # xr = x_ref[0:3, :]
         # xr = x_ref[0:6, :]

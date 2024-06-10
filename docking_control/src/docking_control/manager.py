@@ -3,9 +3,14 @@
 from copy import deepcopy
 import rospy
 from geographic_msgs.msg import GeoPoint, GeoPointStamped
-from mavros_msgs.msg import OverrideRCIn, Param, ParamValue
+from mavros_msgs.msg import OverrideRCIn, ParamValue
 from mavros_msgs.srv import CommandHome, MessageInterval
-from mavros_msgs.srv import ParamPull, ParamGet, ParamSet, ParamSetRequest, ParamSetResponse
+from mavros_msgs.srv import (
+    ParamPull,
+    ParamGet,
+    ParamSet,
+    ParamSetRequest,
+)
 from std_srvs.srv import SetBool, SetBoolResponse
 
 
@@ -24,7 +29,9 @@ class Manager:
 
         self.passthrough_enabled = False
 
-        self.thruster_params_backup = {f"SERVO{i}_FUNCTION": None for i in range(1, self.num_thrusters + 1)}
+        self.thruster_params_backup = {
+            f"SERVO{i}_FUNCTION": None for i in range(1, self.num_thrusters + 1)
+        }
 
         # Publishers
         self.override_rc_in_pub = rospy.Publisher(
@@ -38,7 +45,7 @@ class Manager:
         # self.param_event_sub = rospy.Subscriber(
         #     "/mavros/param/event", Param, self.backup_thruster_params_cb
         # )
-        
+
         self.backup_thruster_params_cb()
 
         # Services
@@ -47,29 +54,25 @@ class Manager:
         )
 
         # Service clients
-        self.set_param_srv_client = rospy.ServiceProxy(
-            "/mavros/param/set", ParamSet
-        )
+        self.set_param_srv_client = rospy.ServiceProxy("/mavros/param/set", ParamSet)
         self.set_message_rates_client = rospy.ServiceProxy(
             "/mavros/set_message_interval", MessageInterval
         )
         self.set_home_pos_client = rospy.ServiceProxy(
             "/mavros/cmd/set_home", CommandHome
         )
-        self.pull_param_client = rospy.ServiceProxy(
-            "/mavros/param/pull", ParamPull)
-        
-        self.get_param_client = rospy.ServiceProxy(
-            "/mavros/param/get", ParamGet)
-        
+        self.pull_param_client = rospy.ServiceProxy("/mavros/param/pull", ParamPull)
+
+        self.get_param_client = rospy.ServiceProxy("/mavros/param/get", ParamGet)
+
         # Set the intervals at which the desired MAVLink messages are sent
         def set_message_rates(message_ids, message_rates):
             for msg, rate in zip(message_ids, message_rates):
-                self.set_message_rates_client(
-                    message_id=msg, message_rate=rate
-                )
+                self.set_message_rates_client(message_id=msg, message_rate=rate)
 
-        message_request_rate = rospy.get_param("~message_intervals/request_interval", 30.0)
+        message_request_rate = rospy.get_param(
+            "~message_intervals/request_interval", 30.0
+        )
         message_ids = rospy.get_param("~message_intervals/ids", [31, 32])
         message_rates = rospy.get_param("~message_intervals/rates", [100.0, 100.0])
 
@@ -152,7 +155,7 @@ class Manager:
 
     #         if self.params_successfully_backed_up:
     #             rospy.loginfo("Successfully backed up the thruster parameters.")
-                
+
     def backup_thruster_params_cb(self):
         """Backup the default thruster parameter values.
 
@@ -169,7 +172,7 @@ class Manager:
         for i in event_ids:
             self.thruster_params_backup[i] = ParamValue(real=j)
             j += 1
-        
+
         if self.params_successfully_backed_up:
             rospy.loginfo("Successfully backed up the thruster parameters.")
 
@@ -206,7 +209,7 @@ class Manager:
         responses = []
         for key, value in params.items():
             request = ParamSetRequest()
-            request.param_id = key 
+            request.param_id = key
             request.value = value
             response = self.set_param_srv_client(request)
             responses.append(response.success)
@@ -296,7 +299,9 @@ class Manager:
             rospy.logwarn("Attempting to disable RC Passthrough mode.")
 
             for _ in range(self.retries):
-                self.passthrough_enabled = not self.set_thruster_params(self.thruster_params_backup)
+                self.passthrough_enabled = not self.set_thruster_params(
+                    self.thruster_params_backup
+                )
 
                 response.success = not self.passthrough_enabled
 
@@ -336,7 +341,7 @@ class Manager:
 
 def main():
     """Run the ROV manager."""
-    manager = Manager()
+    Manager()
     rospy.spin()
 
 

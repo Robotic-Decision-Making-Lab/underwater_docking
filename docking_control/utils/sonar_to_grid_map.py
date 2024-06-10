@@ -1,6 +1,5 @@
 import math
 import numpy as np
-import pdb
 from tqdm import tqdm
 
 EXTEND_AREA = 1.0
@@ -100,10 +99,10 @@ def generate_ray_casting_grid_map(ox, oy, xy_resolution):
     occupancy_map = np.zeros((x_w, y_w))
     # occupancy_map = np.ones((x_w, y_w)) / 2
 
-    center_x = int(
+    int(
         np.floor(-min_x / xy_resolution)
     )  # center x coordinate of the grid map
-    center_y = int(
+    int(
         np.floor(-min_y / xy_resolution)
     )  # center y coordinate of the grid map
 

@@ -1,6 +1,5 @@
 import numpy as np
 import yaml
-from scipy.linalg import block_diag
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel
 from casadi import evalf, SX, mtimes, pinv
 import sys
@@ -61,8 +60,8 @@ class MPC:
         x = SX.sym("x", (12, 1))
         x_dot = SX.sym("x_dot", (12, 1))
         u = SX.sym("u", (self.thrusters, 1))
-        nu_w = SX.sym("nu_w", (3, 1))
-        nu_w_dot = SX.sym("nu_w_dot", (3, 1))
+        SX.sym("nu_w", (3, 1))
+        SX.sym("nu_w_dot", (3, 1))
 
         # f_expl_expr = self.nonlinear_dynamics(x, u, nu_w, nu_w_dot, self.model_type)
         f_expl_expr = self.nonlinear_dynamics(x, u, self.model_type)
@@ -93,11 +92,9 @@ class MPC:
         """Create the optimal control problem (OCP) solver description"""
         self.acados_ocp.model = self.acados_model
         x = self.acados_model.x
-        u = self.acados_model.u
         nx = self.acados_model.x.shape[0]
         nu = self.acados_model.u.shape[0]
-        ny = nx + nu
-        ny_e = nx
+        nx + nu
 
         self.acados_ocp.dims.N = self.horizon
         self.acados_ocp.cost.cost_type = "NONLINEAR_LS"

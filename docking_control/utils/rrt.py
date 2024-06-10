@@ -4,12 +4,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.spatial import cKDTree
 import time
-from tqdm import tqdm
 from copy import deepcopy
 
 
 class RRT:
-
     class Node:
         """The class for defining a node in the RRT tree"""
 
@@ -216,7 +214,7 @@ class RRT:
             waypoints: The waypoints to be traversed
         """
         paths = []
-        fig = plt.figure()
+        plt.figure()
         for i in range(waypoints.shape[0] - 1):
             self.start = self.Node(waypoints[i][0], waypoints[i][1])
             self.goal = self.Node(waypoints[i + 1][0], waypoints[i + 1][1])

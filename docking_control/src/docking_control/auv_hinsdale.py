@@ -1,4 +1,3 @@
-import pdb
 
 import numpy as np
 import yaml
@@ -266,7 +265,7 @@ class AUV(object):
 
         # Gets the transformation matrix to convert from Body to NED frame
         tf_mtx = self.compute_transformation_matrix(eta)
-        tf_mtx_inv = inv(tf_mtx)
+        inv(tf_mtx)
 
         # nu_c = SX.zeros(6,1)
         nu_c = vertcat(f_B, SX.zeros((3, 1)))

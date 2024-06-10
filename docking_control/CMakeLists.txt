@@ -82,4 +82,3 @@ install(FILES
     launch/mav_pluginlists.yaml
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
 )
-

@@ -12,21 +12,19 @@ sys.path.insert(
 )
 
 try:
-    import video
+    pass
 except BaseException:
-    import bluerov2_dock.video as video
+    pass
 
 from auto_dock import MPControl
 
-from std_msgs.msg import Header, Float32MultiArray, MultiArrayDimension
-from geometry_msgs.msg import Pose, Twist, PoseStamped, TwistStamped, WrenchStamped
+from std_msgs.msg import Float32MultiArray, MultiArrayDimension
+from geometry_msgs.msg import PoseStamped, WrenchStamped
 from sensor_msgs.msg import Joy, BatteryState, FluidPressure
 from nav_msgs.msg import Odometry
 from mavros_msgs.msg import OverrideRCIn, State
-from tf2_ros import TransformException, TransformStamped
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
-import tf2_geometry_msgs
 from mavros_msgs.srv import CommandBool
 from std_srvs.srv import SetBool
 from scipy.spatial.transform import Rotation as R
@@ -102,7 +100,7 @@ class BlueROV2:
 
         pwm_vals = csv["PWM"].tolist()
         neg_t_pwm = [pwm_vals[i] for i in range(len(neg_thrust))]
-        zero_t_pwm = [
+        [
             pwm_vals[i]
             for i in range(len(neg_thrust), len(neg_thrust) + len(zero_thrust))
         ]
@@ -179,7 +177,7 @@ class BlueROV2:
             rho = 1000
             g = 9.8
             self.depth = pressure / (rho * g)
-        except Exception as e:
+        except Exception:
             rospy.logerr_throttle(
                 10, "[BlueROV2][pressure_cb] Not receiving pressure readings"
             )
@@ -203,8 +201,8 @@ class BlueROV2:
             z = pose.pose.orientation.z
             w = pose.pose.orientation.w
             euler = R.from_quat([x, y, z, w]).as_euler("xyz")
-            roll = euler[0]
-            pitch = -euler[1]
+            euler[0]
+            -euler[1]
             yaw = -euler[2]
             self.rov_pose = np.zeros((6, 1))
             self.rov_pose[0][0] = pose.pose.position.x
@@ -236,8 +234,9 @@ class BlueROV2:
                 rov_odom.pose.pose.position.x = self.rov_odom[0][0]
                 rov_odom.pose.pose.position.y = self.rov_odom[1][0]
                 rov_odom.pose.pose.position.z = self.rov_odom[2][0]
-                quat = R.from_euler("xyz",
-                    [self.rov_odom[3][0], self.rov_odom[4][0], self.rov_odom[5][0]]
+                quat = R.from_euler(
+                    "xyz",
+                    [self.rov_odom[3][0], self.rov_odom[4][0], self.rov_odom[5][0]],
                 ).as_quat()
                 rov_odom.pose.pose.orientation.x = quat[0]
                 rov_odom.pose.pose.orientation.y = quat[1]
@@ -252,7 +251,7 @@ class BlueROV2:
 
                 self.rov_odom_pub.publish(rov_odom)
             # print(self.rov_pose)
-        except Exception as e:
+        except Exception:
             rospy.logerr_throttle(
                 10, "[BlueROV2][rov_pose_cb] Not receiving ROV's Position"
             )
@@ -275,7 +274,7 @@ class BlueROV2:
             self.rov_twist[4][0] = 0.0
             # self.rov_twist[5][0] = 0.0
             # print(self.rov_twist)
-        except Exception as e:
+        except Exception:
             rospy.logerr_throttle(
                 10, "[BlueROV2][rov_vel_cb] Not receiving ROV's velocity"
             )
@@ -289,7 +288,7 @@ class BlueROV2:
         """
         try:
             self.sub_data_dict[key] = data
-        except Exception as e:
+        except Exception:
             rospy.logerr_throttle(
                 10, "[BlueROV2][store_sub_data] Not receiving {} data".format(key)
             )
@@ -322,7 +321,7 @@ class BlueROV2:
 
             pwm = values
 
-        except Exception as e:
+        except Exception:
             rospy.logerr_throttle(
                 10,
                 "[BlueROV2][thrust_to_pwm] Error in thrust to pwm conversion. Setting neutral pwm",
@@ -377,7 +376,6 @@ class BlueROV2:
         Args:
             joy: Joy message
         """
-        axes = joy.axes
         buttons = joy.buttons
 
         # Switch into autonomous mode when button "A" is pressed
@@ -517,7 +515,7 @@ class BlueROV2:
         self.mpc.mpc.reset()
 
         # Create a copy of axes as a list instead of a tuple so you can modify the values
-        # The RCOverrideOut mesage type also expects a list
+        # The RCOverrideOut message type also expects a list
         temp_axes = list(axes)
         temp_axes[3] *= -1  # fixes reversed yaw axis
         temp_axes[0] *= -1  # fixes reversed lateral L/R axis

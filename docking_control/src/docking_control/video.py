@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import cv2
 import gi
 import numpy as np
 import rospy

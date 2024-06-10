@@ -1,7 +1,6 @@
 import os
 import time
 import numpy as np
-import sys
 import rospy
 
 # sys.path.insert(0, '/home/darth/workspace/bluerov2_ws/src/bluerov2_dock/src/bluerov2_dock')
@@ -120,7 +119,6 @@ class MPControl:
         k = self.wave_number
         phase = self.wave_phase
         c = self.wave_speed
-        T = self.wave_T
         g = self.g
         d = self.water_depth
         omega = self.wave_freq
@@ -184,7 +182,7 @@ class MPControl:
             )
             print(f"Computation Time = {round(self.comp_time,3)}s")
             print("----------------------------------------------")
-            print(f"MPC Contol Input: {np.round(u, 2).T}")
+            print(f"MPC Control Input: {np.round(u, 2).T}")
             print("----------------------------------------------")
             print(f"Axes Forces: {np.round(wrench, 2).T}")
             print("----------------------------------------------")

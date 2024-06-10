@@ -12,7 +12,7 @@
     </joint>
 
     <link name="camera_link" />
-  
+
     <joint name="camera_joint" type="fixed">
       <parent link="base_link"/>
       <child link="camera_link"/>

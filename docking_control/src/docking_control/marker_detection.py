@@ -7,15 +7,12 @@ import cv2
 import math
 import numpy as np
 import video as video
-import threading
 from cv_bridge import CvBridge, CvBridgeError
-from sensor_msgs.msg import Image, CameraInfo
-from std_msgs.msg import Header
+from sensor_msgs.msg import Image
 from tf2_ros import TransformException, TransformStamped
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 from tf2_ros.transform_broadcaster import TransformBroadcaster
-import tf2_geometry_msgs
 from geometry_msgs.msg import PoseStamped
 from scipy.spatial.transform import Rotation as R
 from collections import deque
@@ -185,15 +182,14 @@ class Aruco:
         """
         try:
             frame = self.image
-        except Exception as e:
+        except Exception:
             print("[Aruco][marker_detection] Not receiving any image")
             return
 
         try:
-            prj_mtx = self.proj_mat
             dist_mtx = self.dist_mat
             camera_mtx = self.cam_mat
-        except Exception as e:
+        except Exception:
             print("[Aruco][marker_detection] Not receiving camera info")
             return
 
@@ -210,7 +206,7 @@ class Aruco:
             print("[Aruco][marker_detection] Error detecting markers")
             return
 
-        corner = np.array(corners)
+        np.array(corners)
 
         # If at least one marker is detected, then continue
         if ids is not None:
@@ -274,7 +270,7 @@ class Aruco:
                 # Convert rmat to euler
                 # rvec = self.rotation_matrix_to_euler(rmat)
                 rvec = R.from_matrix(rmat).as_euler("xyz")
-                
+
                 cv2.drawFrameAxes(frame, camera_mtx, dist_mtx, rvec, tvec, 0.1)
 
                 quat = R.from_matrix(rmat).as_quat()
