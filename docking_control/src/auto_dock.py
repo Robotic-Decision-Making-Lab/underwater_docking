@@ -2,15 +2,14 @@ import os
 import time
 import numpy as np
 import rospy
+import sys
 
-# sys.path.insert(
-#     0, "/home/darth/workspace/bluerov2_ws/src/docking_control/src/docking_control"
-# )
+sys.path.insert(0, "/home/ros/ws_dock/src/underwater_docking/docking_control/src")
 
-from auv_hinsdale import AUV
+from auv_hinsdale import AUV  # noqa: E402
 
 # from mpc_casadi import MPC
-from mpc_acados import MPC
+from mpc_acados import MPC  # noqa: E402
 
 
 class MPControl:
@@ -20,11 +19,11 @@ class MPControl:
         """
         cwd = os.path.dirname(__file__)
 
-        # auv_yaml = cwd + "/../../config/auv_bluerov2.yaml"
-        # mpc_yaml = cwd + "/../../config/mpc_bluerov2.yaml"
+        # auv_yaml = cwd + "/../config/auv_bluerov2.yaml"
+        # mpc_yaml = cwd + "/../config/mpc_bluerov2.yaml"
 
-        auv_yaml = cwd + "/../../config/auv_bluerov2_heavy.yaml"
-        mpc_yaml = cwd + "/../../config/mpc_bluerov2_heavy.yaml"
+        auv_yaml = cwd + "/../config/auv_bluerov2_heavy.yaml"
+        mpc_yaml = cwd + "/../config/mpc_bluerov2_heavy.yaml"
 
         # Change these values as desired
         self.tolerance = 0.05

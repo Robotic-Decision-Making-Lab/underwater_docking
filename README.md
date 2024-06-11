@@ -21,7 +21,8 @@ This package was developed to control a BlueROV2 to perform autonomous underwate
 
 - Before proceeding further, make sure that all the steps mentioned in the guide for [Software Setup](https://bluerobotics.com/learn/bluerov2-software-setup
 ) has been followed.
-- From a terminal, run `roslaunch bluerov2_dock mission_control.launch`
+- Open a terminal and source the workspace: `source ~/ws_dock/devel/setup.bash`
+- Run `roslaunch docking_control mission_control.launch`
   - If the terminal initially outputs *Controller error:'joy'*, move the sticks to clear the error.
   - Press button "A" on the joystick to enable autonomous docking mode.
     - To switch back to manual mode, move either of the sticks in any direction.

@@ -85,8 +85,8 @@ RUN git clone https://github.com/acados/acados.git \
 # Install acados python interface
 WORKDIR /home/$USERNAME
 RUN pip install -e /home/$USERNAME/acados/interfaces/acados_template \
-    && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/home/$USERNAME/acados/lib" \
-    && export ACADOS_SOURCE_DIR="/home/$USERNAME/acados"
+    && echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/home/$USERNAME/acados/lib"" >> /home/$USERNAME/.bashrc \
+    && echo "ACADOS_SOURCE_DIR="/home/$USERNAME/acados"" >> /home/$USERNAME/.bashrc
 
 
 ENV USER_WORKSPACE=/home/$USERNAME/ws_dock

@@ -2,7 +2,10 @@ import numpy as np
 import yaml
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel
 from casadi import evalf, SX, mtimes, pinv
-from auv_hinsdale import AUV
+import sys
+
+sys.path.insert(0, "/home/ros/ws_dock/src/underwater_docking/docking_control/src")
+from auv_hinsdale import AUV  # noqa: E402
 
 
 class MPC:

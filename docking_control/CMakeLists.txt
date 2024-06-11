@@ -68,15 +68,15 @@ ${catkin_INCLUDE_DIRS}
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
-  src/docking_control/mission_control.py
-  src/docking_control/pwm_publish_node.py
-  src/docking_control/video.py
-  src/docking_control/manager.py
-  src/docking_control/auto_dock.py
-  src/docking_control/mpc_casadi.py
-  src/docking_control/mpc_acados.py
-  src/docking_control/auv_hinsdale.py
-  src/docking_control/marker_detection.py
+  src/mission_control.py
+  src/pwm_publish_node.py
+  src/video.py
+  src/manager.py
+  src/auto_dock.py
+  src/mpc_casadi.py
+  src/mpc_acados.py
+  src/auv_hinsdale.py
+  src/marker_detection.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

@@ -105,7 +105,7 @@ class Aruco:
     def load_camera_config(self):
         """This function is used to load the camera calibration parameters."""
         cwd = os.path.dirname(__file__)
-        filename = cwd + "/../../config/in_air/ost.yaml"
+        filename = cwd + "/../config/in_air/ost.yaml"
         f = open(filename, "r")
         camera_params = yaml.load(f.read(), Loader=yaml.SafeLoader)
         self.cam_mat = np.array(

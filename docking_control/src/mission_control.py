@@ -5,7 +5,6 @@ import time
 import numpy as np
 import pandas as pd
 import os
-from auto_dock import MPControl
 from std_msgs.msg import Float32MultiArray, MultiArrayDimension
 from geometry_msgs.msg import PoseStamped, WrenchStamped
 from sensor_msgs.msg import Joy, BatteryState, FluidPressure
@@ -16,6 +15,11 @@ from tf2_ros.transform_listener import TransformListener
 from mavros_msgs.srv import CommandBool
 from std_srvs.srv import SetBool
 from scipy.spatial.transform import Rotation as R
+
+import sys
+
+sys.path.insert(0, "/home/ros/ws_dock/src/underwater_docking/docking_control/src")
+from auto_dock import MPControl  # noqa: E402
 
 
 class BlueROV2:
@@ -78,7 +82,7 @@ class BlueROV2:
     def load_pwm_lookup(self):
         """Load the lookup table for converting thrust to pwm values"""
         cwd = os.path.dirname(__file__)
-        csv = pd.read_csv(cwd + "/../../data/T200_data_16V.csv")
+        csv = pd.read_csv(cwd + "/../data/T200_data_16V.csv")
 
         thrust_vals = csv["Force"].tolist()
         neg_thrust = [i for i in thrust_vals if i < 0]
