@@ -3,7 +3,6 @@
 import rospy
 import time
 import numpy as np
-import sys
 import pandas as pd
 import os
 from auto_dock import MPControl

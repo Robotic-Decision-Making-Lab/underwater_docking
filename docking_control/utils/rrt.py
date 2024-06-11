@@ -20,8 +20,10 @@ class RRT:
         """Initialize the RRT class"""
         # self.filename = "/Users/rakeshvivekanandan/workspace/" + \
         #     "bluerov2_dock/data/occ_map_binary.npy"
-        self.filename = "/home/darth/workspace/bluerov2_ws/" + \
-            "src/bluerov2_dock/data/occ_map_binary.npy"
+        self.filename = (
+            "/home/darth/workspace/bluerov2_ws/"
+            + "src/bluerov2_dock/data/occ_map_binary.npy"
+        )
         self.load_map()
         self.bounds = np.array([[0, self.occ_map.shape[0]], [0, self.occ_map.shape[1]]])
         # self.min_rand = 0

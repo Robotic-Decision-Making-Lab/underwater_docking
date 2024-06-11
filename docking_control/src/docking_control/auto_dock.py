@@ -179,9 +179,7 @@ class MPControl:
 
             self.comp_time = time.perf_counter() - process_t0
 
-            print(
-                f"T = {round(self.t_span[self.time_id],3)}s"
-            )
+            print(f"T = {round(self.t_span[self.time_id],3)}s")
             print(f"Computation Time = {round(self.comp_time,3)}s")
             print("----------------------------------------------")
             print(f"MPC Control Input: {np.round(u, 2).T}")

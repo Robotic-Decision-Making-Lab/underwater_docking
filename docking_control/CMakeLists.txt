@@ -28,11 +28,6 @@ find_package(catkin REQUIRED COMPONENTS
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
-## Uncomment this if the package has a setup.py. This macro ensures
-## modules and global scripts declared therein get installed
-## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-catkin_python_setup()
-
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -45,7 +40,17 @@ catkin_python_setup()
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES docking_control
- CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
+  CATKIN_DEPENDS
+    roscpp
+    rospy
+    std_msgs
+    sensor_msgs
+    geometry_msgs
+    mavros_msgs
+    tf2_geometry_msgs
+    nav_msgs
+    tf2
+    tf2_ros
 #  DEPENDS system_lib
 )
 
