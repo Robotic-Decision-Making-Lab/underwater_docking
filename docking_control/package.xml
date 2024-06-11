@@ -34,7 +34,7 @@
   <depend>tf2_ros</depend>
   <depend>xacro</depend>
   <depend>robot_state_publisher</depend>
-  <depend>joystick_drivers</depend>
+  <depend>joy</depend>
   <depend>cv_bridge</depend>
 
   <exec_depend>mavros</exec_depend>
