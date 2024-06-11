@@ -1,12 +1,6 @@
 import yaml
 import numpy as np
 from casadi import SX, Function, integrator, Opti, evalf, mtimes, vertcat, pinv
-import sys
-
-sys.path.insert(
-    0, "/home/darth/workspace/bluerov2_ws/src/bluerov2_dock/src/bluerov2_dock"
-)
-
 from auv_hinsdale import AUV
 
 
