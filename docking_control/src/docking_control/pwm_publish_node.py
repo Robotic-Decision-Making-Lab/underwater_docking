@@ -9,7 +9,9 @@ class PWMPublish:
         self.control_pub = rospy.Publisher(
             "/mavros/rc/override", OverrideRCIn, queue_size=1
         )
-        self.pwm_sub = rospy.Subscriber("/docking_control/pwm", OverrideRCIn, self.pwm_cb)
+        self.pwm_sub = rospy.Subscriber(
+            "/docking_control/pwm", OverrideRCIn, self.pwm_cb
+        )
         self.pwm_data = None
         # self.pwm_data = OverrideRCIn()
         # self.pwm_data.channels = [OverrideRCIn.CHAN_NOCHANGE] * 18
