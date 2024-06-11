@@ -4,7 +4,18 @@ This package was developed to control a BlueROV2 to perform autonomous underwate
 
 ## Getting Started
 
-TODO: Add instructions here
+### Docker Installation
+
+- Install Docker on your system by following the step-by-step guide provided [here](https://docs.docker.com/get-docker/).
+- To leverage the *-desktop-nvidia image and utilize NVIDIA GPU support, follow this installation guide to set up the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html).
+- Use the guide provided [here](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) to connect to the GitHub Container Registry.
+
+### Development Containers
+
+- To use Visual Studio Code within [development containers](https://github.com/Robotic-Decision-Making-Lab/underwater_docking/tree/main/.devcontainer), follow the tutorial provided [here](https://code.visualstudio.com/docs/devcontainers/tutorial).
+- Next, clone and open [this](https://github.com/Robotic-Decision-Making-Lab/underwater_docking) repository in VSCode.
+- Choose the option to reopen it inside a container when prompted.
+- Once the container is built, you can begin your development.
 
 ## Usage
 
