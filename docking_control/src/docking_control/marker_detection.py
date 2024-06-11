@@ -124,10 +124,10 @@ class Aruco:
             "/BlueROV2/video", Image, self.callback_image, queue_size=1
         )
         self.image_pub = rospy.Publisher(
-            "/bluerov2_dock/marker_detection", Image, queue_size=1
+            "/docking_control/marker_detection", Image, queue_size=1
         )
         self.vision_pose_pub = rospy.Publisher(
-            "/bluerov2_dock/vision_pose/pose", PoseStamped, queue_size=1
+            "/docking_control/vision_pose/pose", PoseStamped, queue_size=1
         )
 
     def rotation_matrix_to_euler(self, R):

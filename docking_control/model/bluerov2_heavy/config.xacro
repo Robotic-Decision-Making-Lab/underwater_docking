@@ -3,7 +3,7 @@
 
   <!-- Import BlueROV2 macro -->
   <xacro:include
-    filename="$(find bluerov2_dock)/model/bluerov2_heavy/urdf.xacro" />
+    filename="$(find docking_control)/model/bluerov2_heavy/urdf.xacro" />
   <xacro:bluerov2_heavy_urdf/>
 
 </robot>

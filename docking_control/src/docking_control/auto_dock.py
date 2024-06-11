@@ -4,7 +4,7 @@ import numpy as np
 import rospy
 
 # sys.path.insert(
-#     0, "/home/darth/workspace/bluerov2_ws/src/bluerov2_dock/src/bluerov2_dock"
+#     0, "/home/darth/workspace/bluerov2_ws/src/docking_control/src/docking_control"
 # )
 
 from auv_hinsdale import AUV

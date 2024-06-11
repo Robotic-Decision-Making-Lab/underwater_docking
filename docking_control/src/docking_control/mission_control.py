@@ -114,7 +114,7 @@ class BlueROV2:
             "/mavros/imu/static_pressure", FluidPressure, self.pressure_cb
         )
         self.rov_pose_sub = rospy.Subscriber(
-            "/bluerov2_dock/vision_pose/pose", PoseStamped, self.rov_pose_cb
+            "/docking_control/vision_pose/pose", PoseStamped, self.rov_pose_cb
         )
         # self.rov_vel_sub = rospy.Subscriber(
         #     "/mavros/local_position/velocity_body", TwistStamped, self.rov_vel_cb
@@ -126,19 +126,19 @@ class BlueROV2:
         #     "/mavros/rc/override", OverrideRCIn, queue_size=1
         # )
         self.control_pub = rospy.Publisher(
-            "/bluerov2_dock/pwm", OverrideRCIn, queue_size=1
+            "/docking_control/pwm", OverrideRCIn, queue_size=1
         )
         self.mpc_pwm_pub = rospy.Publisher(
-            "/bluerov2_dock/mpc_pwm", OverrideRCIn, queue_size=1
+            "/docking_control/mpc_pwm", OverrideRCIn, queue_size=1
         )
         self.mpc_output = rospy.Publisher(
-            "/bluerov2_dock/mpc", Float32MultiArray, queue_size=1
+            "/docking_control/mpc", Float32MultiArray, queue_size=1
         )
         self.rov_odom_pub = rospy.Publisher(
-            "/bluerov2_dock/rov_odom", Odometry, queue_size=1
+            "/docking_control/rov_odom", Odometry, queue_size=1
         )
         self.mpc_wrench_pub = rospy.Publisher(
-            "/bluerov2_dock/mpc_wrench", WrenchStamped, queue_size=1
+            "/docking_control/mpc_wrench", WrenchStamped, queue_size=1
         )
 
     def initialize_services(self):

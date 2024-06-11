@@ -249,7 +249,7 @@ if __name__ == "__main__":
     try:
         rospy.init_node("decode_sonar_log", anonymous=True)
         sonar_pub = rospy.Publisher(
-            "/bluerov2_dock/ping360_scan", LaserScan, queue_size=1
+            "/docking_control/ping360_scan", LaserScan, queue_size=1
         )
 
         # Parse arguments
