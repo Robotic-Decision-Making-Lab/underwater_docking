@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.10
 
 import yaml
+
 # from actag_code import AcTagDetection
 from actag import AcTag
 import rospy
@@ -8,6 +9,7 @@ import os
 import cv2
 import math
 import numpy as np
+
 # import video as video
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
@@ -23,7 +25,6 @@ from collections import deque
 # Helper function that parses AcTag detection data
 # and prints the results
 def parse_and_print_results(detected_tags):
-
     num_detected_tags = len(detected_tags)
     print("Number of Detected Tags: ", num_detected_tags)
 
@@ -37,7 +38,6 @@ def parse_and_print_results(detected_tags):
 
 # This helper function draws the detected tags onto the image
 def visualize_decoded_tags(my_sonar_image, detected_tags):
-
     output_image = cv2.cvtColor(my_sonar_image, cv2.COLOR_GRAY2RGB)
     for detected_tag in detected_tags:
         # Extract corner points
@@ -45,13 +45,13 @@ def visualize_decoded_tags(my_sonar_image, detected_tags):
         ptA = (corner_locs[0][0], corner_locs[0][1])
         ptB = (corner_locs[1][0], corner_locs[1][1])
         ptC = (corner_locs[2][0], corner_locs[2][1])
-        ptD = (corner_locs[3][0], corner_locs[3][1])
+        pdf = (corner_locs[3][0], corner_locs[3][1])
 
         # Reverse x and y to get the correct orientation with cv2.imshow()
         ptA = (ptA[1], ptA[0])
         ptB = (ptB[1], ptB[0])
         ptC = (ptC[1], ptC[0])
-        ptD = (ptD[1], ptD[0])
+        pdf = (pdf[1], pdf[0])
 
         # Draw the bounding box of the AcTag Square
         color = (0, 255, 0)
@@ -59,10 +59,10 @@ def visualize_decoded_tags(my_sonar_image, detected_tags):
         cv2.putText(output_image, "1", ptA, cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
         cv2.line(output_image, ptB, ptC, color, 1)
         cv2.putText(output_image, "2", ptB, cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
-        cv2.line(output_image, ptC, ptD, color, 1)
+        cv2.line(output_image, ptC, pdf, color, 1)
         cv2.putText(output_image, "3", ptC, cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
-        cv2.line(output_image, ptD, ptA, color, 1)
-        cv2.putText(output_image, "4", ptD, cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+        cv2.line(output_image, pdf, ptA, color, 1)
+        cv2.putText(output_image, "4", pdf, cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
 
         # Put the Tag ID in the center
         center = (int((ptA[0] + ptC[0]) / 2), int((ptA[1] + ptC[1]) / 2))
