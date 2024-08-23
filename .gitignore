@@ -8,3 +8,8 @@ log
 *.pyc
 *.bag
 .DS_Store
+*.mat
+.venv
+*.stl
+*.dae
+*.m
