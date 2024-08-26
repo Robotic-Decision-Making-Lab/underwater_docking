@@ -49,7 +49,7 @@ class Aruco:
         """This class is used to detect ArUco markers and estimate the pose
         of the ROV.
         """
-        self.desired_markers = [2, 7, 8, 9, 10, 11]
+        self.desired_markers = [2, 3, 4, 7, 8, 9, 10, 11]
         # self.desired_markers = [1, 4]
 
         """
@@ -64,6 +64,7 @@ class Aruco:
         self.marker_size = {
             1: 0.20,
             2: 0.10,
+            3: 0.05,
             4: 0.15,
             7: 0.05,
             8: 0.10,
@@ -89,7 +90,7 @@ class Aruco:
         self.selected_dict = ARUCO_DICT["DICT_6X6_50"]
 
         # Offset from the ROV's center of gravity (COG) to the camera center
-        self.camera_offset = [0.16, -0.06]
+        self.camera_offset = [0.16, 0.06]
 
         # Provide access to TF2
         self.tf_buffer = Buffer()

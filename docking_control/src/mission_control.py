@@ -33,8 +33,8 @@ class BlueROV2:
 
         # Set up pulse width modulation (pwm) values
         self.neutral_pwm = 1500
-        # self.max_pwm_auto = 1600
-        # self.min_pwm_auto = 1400
+        self.max_pwm_auto = 1600
+        self.min_pwm_auto = 1400
         self.max_pwm_manual = 1700
         self.min_pwm_manual = 1300
         self.max_possible_pwm = 1900
@@ -65,6 +65,7 @@ class BlueROV2:
 
         self.image_idx = 0
         self.light_level = 1500
+        self.camera_tilt = 1500
         self.rc_passthrough_flag = False
 
         self.load_pwm_lookup()
@@ -190,16 +191,16 @@ class BlueROV2:
             z = pose.pose.orientation.z
             w = pose.pose.orientation.w
             euler = R.from_quat([x, y, z, w]).as_euler("xyz")
-            euler[0]
-            -euler[1]
-            yaw = -euler[2]
+            roll = euler[0]
+            pitch = euler[1]
+            yaw = euler[2]
             self.rov_pose = np.zeros((6, 1))
             self.rov_pose[0][0] = pose.pose.position.x
             self.rov_pose[1][0] = -pose.pose.position.y
             self.rov_pose[2][0] = -pose.pose.position.z
-            self.rov_pose[3][0] = 0.0
-            self.rov_pose[4][0] = 0.0
-            self.rov_pose[5][0] = yaw
+            self.rov_pose[3][0] = roll
+            self.rov_pose[4][0] = -pitch
+            self.rov_pose[5][0] = -yaw
 
             if self.first_pose_flag:
                 self.rov_pose_sub_time = pose.header.stamp.to_sec()
@@ -436,8 +437,10 @@ class BlueROV2:
             # self.rov_odom = np.vstack((self.rov_pose, self.rov_twist))
             x0 = self.rov_odom
 
-        # x0 = np.array([[0., 0., 0., 0., 0., 0, 0., 0., 0., 0., 0., 0.]]).T
-        xr = np.array([[0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
+        # x0 = np.array([[0.0, 5.0, 5.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
+        # xr = np.array([[2.0, 5.0, 5.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
+        # xr = np.array([[x0[0, 0], 5.0, 5.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
+        xr = np.array([[-5.0, 5.0, 5.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
 
         try:
             forces, wrench, converge_flag = self.mpc.run_mpc(x0, xr)
@@ -489,8 +492,13 @@ class BlueROV2:
 
                 for i in range(len(pwm)):
                     pwm[i] = max(
-                        min(pwm[i], self.max_possible_pwm), self.min_possible_pwm
+                        min(pwm[i], self.max_pwm_auto), self.min_pwm_auto
                     )
+
+                if all(element == 0.0 for element in np.round(wrench[1:6],2)):
+                    pwm[0:4] = [1800, 1800, 1800, 1800]
+
+                pwm[8] = 1250
 
                 self.mpc_pwm_pub.publish(pwm)
                 self.control_pub.publish(pwm)
@@ -536,7 +544,14 @@ class BlueROV2:
         elif buttons[4] == 1:
             self.light_level -= 100
 
+        if buttons[8] == 1:
+            self.camera_tilt += 100
+        elif buttons[9] == 1:
+            self.camera_tilt -= 100
+
         override[8] = self.light_level
+
+        override[17] = self.camera_tilt
 
         # Cap the pwm value (limits the ROV velocity)
         for i in range(len(override)):
@@ -545,6 +560,8 @@ class BlueROV2:
             )
 
         self.light_level = override[8]
+
+        self.camera_tilt = override[17]
 
         # Send joystick data as rc output into rc override topic
         self.control_pub.publish(override)

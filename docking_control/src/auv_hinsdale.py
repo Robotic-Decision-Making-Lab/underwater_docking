@@ -265,7 +265,6 @@ class AUV(object):
 
         # Gets the transformation matrix to convert from Body to Inretial frame
         tf_mtx = self.compute_transformation_matrix(eta)
-        inv(tf_mtx)
 
         # nu_c = SX.zeros(6,1)
         nu_c = vertcat(f_B, SX.zeros((3, 1)))
@@ -300,7 +299,8 @@ class AUV(object):
         coriolis_force_RB_A = self.compute_C_RB_force(nu_r) + self.compute_C_A_force(
             nu_r
         )
-        wave_force = self.compute_wave_force()
+        # wave_force = self.compute_wave_force()
+        wave_force = 0.0
 
         # Full Body Dynamics
         nu_r_dot = if_else(

@@ -17,8 +17,14 @@
       <parent link="base_link"/>
       <child link="camera_link"/>
       <origin rpy="-1.571 0 -1.571" xyz="0.21 0 0.067" />
-      <!-- <origin rpy="3.142 0 1.571" xyz="0 0.21 -0.067"/> -->
-      <!-- <axis xyz="0 0 1" /> -->
+    </joint>
+
+    <link name="sonar_link" />
+
+    <joint name="sonar_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="sonar_link"/>
+      <origin rpy="3.14 -1.571 0" xyz="0.21 -0.09 -0.12"/>
     </joint>
 
     <!-- Import T200 macro -->
