@@ -441,6 +441,8 @@ class BlueROV2:
         # xr = np.array([[2.0, 5.0, 5.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
         # xr = np.array([[x0[0, 0], 5.0, 5.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
         xr = np.array([[-5.0, 5.0, 5.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
+        # xr = np.array([[x0[0, 0], 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
+        # xr = np.array([[0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
 
         try:
             forces, wrench, converge_flag = self.mpc.run_mpc(x0, xr)
@@ -491,14 +493,12 @@ class BlueROV2:
                     # pwm.append(self.neutral_pwm)
 
                 for i in range(len(pwm)):
-                    pwm[i] = max(
-                        min(pwm[i], self.max_pwm_auto), self.min_pwm_auto
-                    )
+                    pwm[i] = max(min(pwm[i], self.max_pwm_auto), self.min_pwm_auto)
 
-                if all(element == 0.0 for element in np.round(wrench[1:6],2)):
+                if all(element == 0.0 for element in np.round(wrench[1:6], 2)):
                     pwm[0:4] = [1800, 1800, 1800, 1800]
 
-                pwm[8] = 1250
+                pwm[8] = 1300
 
                 self.mpc_pwm_pub.publish(pwm)
                 self.control_pub.publish(pwm)

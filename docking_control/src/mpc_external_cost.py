@@ -225,7 +225,7 @@ class MPC:
             if k == 0:
                 u_prev = np.array([self.previous_control[:, k]]).T
             else:
-                u_prev = np.array([self.acados_ocp_solver.get(k-1, "u")]).T
+                u_prev = np.array([self.acados_ocp_solver.get(k - 1, "u")]).T
 
             self.acados_ocp_solver.set(k, "p", np.vstack((xr, u_prev)))
         self.acados_ocp_solver.set(N, "p", np.vstack((xr, u_prev)))
@@ -253,14 +253,14 @@ class MPC:
 
         wrench_next = self.acados_ocp_solver.get(0, "u")
 
-        # dist_err = abs(x0[0, :] - xr[0, :])
+        # dist_err = abs(x0[0, :] - xr[0, :])[0]
         # yaw_err = abs((((x0[5, :] - xr[5, :]) + np.pi) % (2 * np.pi)) - np.pi)[0]
 
         # if dist_err < 0.25 and yaw_err > 0.035:
-        #     wrench[0:5] = 0.0
+        #     wrench_next[0:5] = 0.0
 
         # if dist_err < 0.15 and yaw_err < 0.035:
-        #     wrench[1:6] = 0.0
+        #     wrench_next[1:6] = 0.0
 
         u_next = evalf(mtimes(pinv(self.auv.tcm), wrench_next)).full()
 
