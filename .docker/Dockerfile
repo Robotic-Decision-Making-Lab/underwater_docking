@@ -100,7 +100,7 @@ WORKDIR $USER_WORKSPACE
 COPY --chown=$USER_UID:$USER_GID . src/$PROJECT_NAME
 
 # Install the Python requirements that aren't available as rosdeps
-RUN python3 -m pip install -r $(pwd)/src/underwater_docking/requirements-build.txt
+# RUN python3 -m pip install -r $(pwd)/src/underwater_docking/requirements-build.txt
 
 # Install gstreamer
 RUN sudo apt-get -q update \
