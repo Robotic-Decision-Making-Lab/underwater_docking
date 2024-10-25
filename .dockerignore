@@ -2,7 +2,8 @@
 *
 
 # Except the following
-!requirements-dev.txt
+!requirements-build.txt
+!underwater_docking.repos
 
 # Allow your ROS packages here, e.g.:
 !docking_control
