@@ -1,7 +1,6 @@
 import os
 import time
 import numpy as np
-import rospy
 import sys
 
 sys.path.insert(0, "/home/ros/ws_dock/src/underwater_docking/docking_control/src")
@@ -165,17 +164,22 @@ class MPControl:
         # xr[5, :] += np.pi
         xr[3:6, :] = self.wrap_pi2negpi(xr[3:6, :])
 
-        x0[6:12, :] = np.clip(x0[6:12, 0], self.mpc.xmin[6:12], self.mpc.xmax[6:12]).reshape(-1, 1)
+        x0[6:12, :] = np.clip(
+            x0[6:12, 0], self.mpc.xmin[6:12], self.mpc.xmax[6:12]
+        ).reshape(-1, 1)
 
         self.yaw_diff = abs((((x0[5, :] - xr[5, :]) + np.pi) % (2 * np.pi)) - np.pi)[0]
-        self.ang_diff = np.linalg.norm((((x0[3:6, :] - xr[3:6, :]) + np.pi) % (2 * np.pi)) - np.pi)
+        self.ang_diff = np.linalg.norm(
+            (((x0[3:6, :] - xr[3:6, :]) + np.pi) % (2 * np.pi)) - np.pi
+        )
 
         if self.distance <= self.tolerance and self.yaw_diff <= self.yaw_tolerance:
-        # if self.distance < self.tolerance and self.ang_diff < self.yaw_tolerance:
+            # if self.distance < self.tolerance and self.ang_diff < self.yaw_tolerance:
             return np.zeros((8, 1)), np.zeros((6, 1)), True
 
         else:
-            # nu_w = self.compute_wave_particle_vel(x0[0:6, :], self.t_span[self.time_id])
+            # nu_w = self.compute_wave_particle_vel(x0[0:6, :],
+            #                                       self.t_span[self.time_id])
             # rospy.logwarn(f"Wave Info: {nu_w}")
             # self.auv.nu_w = nu_w
             x0[3:5, :] = 0.0

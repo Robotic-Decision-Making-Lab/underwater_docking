@@ -174,7 +174,9 @@ class MPC:
         self.flag = False
 
     def warm_start(self, x0):
-        # self.previous_control = self.acados_ocp_solver.solve_for_x0(x0, fail_on_nonzero_status=False)
+        # self.previous_control = self.acados_ocp_solver.solve_for_x0(
+        #     x0, fail_on_nonzero_status=False
+        # )
         # self.previous_control = np.array([self.previous_control]).T
         self.acados_ocp_solver.set(0, "lbx", x0)
         self.acados_ocp_solver.set(0, "ubx", x0)

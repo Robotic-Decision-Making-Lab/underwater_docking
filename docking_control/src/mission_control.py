@@ -262,7 +262,7 @@ class BlueROV2:
             self.rov_twist[5][0] = -vel.twist.angular.z
             self.rov_twist[3][0] = 0.0
             self.rov_twist[4][0] = 0.0
-            # self.rov_twist[5][0] = 0.0
+            # self.rov_twist[5][0] = 0.
             # print(self.rov_twist)
         except Exception:
             rospy.logerr_throttle(
@@ -437,12 +437,12 @@ class BlueROV2:
             # self.rov_odom = np.vstack((self.rov_pose, self.rov_twist))
             x0 = self.rov_odom
 
-        # x0 = np.array([[0.0, 5.0, 5.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
-        # xr = np.array([[2.0, 5.0, 5.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
-        # xr = np.array([[x0[0, 0], 5.0, 5.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
+        # x0 = np.array([[0., 5., 5., 0., 0., 0, 0., 0., 0., 0., 0., 0.]]).T
+        # xr = np.array([[2., 5., 5., 0., 0., 0, 0., 0., 0., 0., 0., 0.]]).T
+        # xr = np.array([[x0[0, 0], 5., 5., 0., 0., 0, 0., 0., 0., 0., 0., 0.]]).T
         xr = np.array([[-5.0, 5.0, 5.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
-        # xr = np.array([[x0[0, 0], 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
-        # xr = np.array([[0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
+        # xr = np.array([[x0[0, 0], 0., 0., 0., 0., 0, 0., 0., 0., 0., 0., 0.]]).T
+        # xr = np.array([[0., 0., 0., 0., 0., 0, 0., 0., 0., 0., 0., 0.]]).T
 
         try:
             forces, wrench, converge_flag = self.mpc.run_mpc(x0, xr)
