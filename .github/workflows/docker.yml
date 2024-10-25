@@ -8,6 +8,8 @@ on:
     paths:
       - .docker/**
       - .github/workflows/docker.yaml
+      - underwater_docking.repos
+      - requirements-build.txt
   workflow_dispatch:
 
 env:

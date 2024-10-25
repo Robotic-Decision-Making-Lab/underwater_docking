@@ -2,11 +2,11 @@ ARG ROS_DISTRO=jazzy
 FROM ros:$ROS_DISTRO-ros-base AS ci
 
 ENV DEBIAN_FRONTEND=noninteractive
-WORKDIR /root/ws_dock
 
 # Update to be your project's name
 ENV PROJECT_NAME=underwater_docking
 
+WORKDIR /root/ws_dock
 COPY . src/$PROJECT_NAME
 
 # Install apt packages
@@ -46,9 +46,8 @@ RUN apt-get -q update \
 
 FROM ci AS robot
 
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Configure a new non-root user
+# Ubuntu 24.04 "Noble", which is used as the base image for
+# jazzy and rolling images, now includes a user "ubuntu" at UID 1000
 ARG USERNAME=ubuntu
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
@@ -57,6 +56,8 @@ RUN echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME \
     && usermod -a -G dialout $USERNAME \
     && echo "source /usr/share/bash-completion/completions/git" >> /home/$USERNAME/.bashrc
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Switch to the non-root user
 USER $USERNAME
@@ -94,13 +95,12 @@ RUN pip install -e /home/$USERNAME/acados/interfaces/acados_template \
     && echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/home/$USERNAME/acados/lib"" >> /home/$USERNAME/.bashrc \
     && echo "ACADOS_SOURCE_DIR="/home/$USERNAME/acados"" >> /home/$USERNAME/.bashrc
 
-
 ENV USER_WORKSPACE=/home/$USERNAME/ws_dock
 WORKDIR $USER_WORKSPACE
 COPY --chown=$USER_UID:$USER_GID . src/$PROJECT_NAME
 
 # Install the Python requirements that aren't available as rosdeps
-# RUN python3 -m pip install -r $(pwd)/src/underwater_docking/requirements-build.txt
+RUN python3 -m pip install -r $(pwd)/src/underwater_docking/requirements-build.txt
 
 # Install gstreamer
 RUN sudo apt-get -q update \
