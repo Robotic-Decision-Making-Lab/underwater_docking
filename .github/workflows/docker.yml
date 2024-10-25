@@ -3,7 +3,7 @@ name: Docker
 on:
   push:
     branches:
-      - main
+      - ros2-dev
   pull_request:
     paths:
       - .docker/**
@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ROS_DISTRO: [noetic]
+        ROS_DISTRO: [jazzy]
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -59,7 +59,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ROS_DISTRO: [noetic]
+        ROS_DISTRO: [jazzy]
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -107,7 +107,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ROS_DISTRO: [noetic]
+        ROS_DISTRO: [jazzy]
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -148,7 +148,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ROS_DISTRO: [noetic]
+        ROS_DISTRO: [jazzy]
     runs-on: ubuntu-latest
     permissions:
       packages: write

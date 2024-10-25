@@ -23,23 +23,13 @@
   "autoDocstring.startOnNewLine": false,
   "autoDocstring.docstringFormat": "google-notypes",
   "python.autoComplete.extraPaths": [
-    "/opt/ros/noetic/local/lib/python3/dist-packages/",
-    "${workspaceFolder}/src/"
+    "/opt/ros/jazzy/lib/python3.12/site-packages/",
+    "/opt/ros/jazzy/local/lib/python3.12/dist-packages/"
   ],
   "python.analysis.extraPaths": [
-    "/opt/ros/noetic/local/lib/python3/dist-packages/",
-    "${workspaceFolder}/src/"
+    "/opt/ros/jazzy/lib/python3.12/site-packages/",
+    "/opt/ros/jazzy/local/lib/python3.12/dist-packages/"
   ],
-  "C_Cpp.default.intelliSenseMode": "linux-gcc-x86",
-  "C_Cpp.clang_format_fallbackStyle": "Google",
-  "C_Cpp.codeAnalysis.clangTidy.enabled": true,
-  "C_Cpp.codeAnalysis.clangTidy.codeAction.formatFixes": true,
-  "clang-format.executable": "/usr/bin/clang-format-12",
-  "[cpp]": {
-    "editor.rulers": [100],
-    "editor.tabSize": 2,
-    "editor.defaultFormatter": "xaver.clang-format"
-  },
   "[python]": {
     "editor.tabSize": 4,
     "editor.rulers": [90],
@@ -48,7 +38,7 @@
       "source.fixAll": "explicit",
       "source.organizeImports": "explicit"
     },
-    "editor.defaultFormatter": "ms-python.black-formatter"
+    "editor.defaultFormatter": "charliermarsh.ruff"
   },
   "[dockerfile]": {
     "editor.quickSuggestions": {
@@ -63,13 +53,10 @@
   "[xml]": {
     "editor.defaultFormatter": "redhat.vscode-xml"
   },
-  "[markdown]": {
-    "editor.rulers": [80],
-    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
-  },
   "search.exclude": {
     "**/build": true,
     "**/install": true,
     "**/log": true
-  }
+  },
+  "python.analysis.typeCheckingMode": "basic"
 }

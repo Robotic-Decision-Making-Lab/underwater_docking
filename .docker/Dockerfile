@@ -1,5 +1,5 @@
-ARG ROS_DISTRO=noetic
-FROM ros:$ROS_DISTRO-ros-base as ci
+ARG ROS_DISTRO=jazzy
+FROM ros:$ROS_DISTRO-ros-base AS ci
 
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /root/ws_dock
@@ -16,21 +16,19 @@ RUN apt-get -q update \
     git \
     sudo \
     clang \
-    clang-format-12 \
+    clang-format-14 \
     clang-tidy \
     clang-tools \
     python3-pip \
     python3-dev \
-    python3-rosdep \
-    python3-rosinstall \
-    python3-rosinstall-generator \
-    python3-wstool \
-    python3-catkin-tools \
-    build-essential \
-    nano \
-    vim \
+    python3-venv \
     apt-utils \
+    vim \
+    lsb-release \
+    gnupg \
     wget \
+    curl \
+    nano \
     software-properties-common \
     && apt-get autoremove -y \
     && apt-get clean -y \
@@ -46,16 +44,16 @@ RUN apt-get -q update \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
-FROM ci as robot
+FROM ci AS robot
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Configure a new non-root user
-ARG USERNAME=ros
+ARG USERNAME=ubuntu
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
-    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+RUN echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME \
     && usermod -a -G dialout $USERNAME \
     && echo "source /usr/share/bash-completion/completions/git" >> /home/$USERNAME/.bashrc
@@ -64,7 +62,15 @@ RUN groupadd --gid $USER_GID $USERNAME \
 USER $USERNAME
 ENV USER=$USERNAME
 
-ENV DEBIAN_FRONTEND=noninteractive
+# Python in Ubuntu is now marked as a "Externally managed environment",
+# Per best practice, create a venv for local python packages
+#
+# These two ENVs effectively "activate" the venv for subsequent calls to
+# python/pip in the Dockerfile
+WORKDIR /home/$USERNAME
+ENV VIRTUAL_ENV=/home/$USERNAME/.venv/underwater_docking
+RUN python3 -m venv --system-site-packages --symlinks $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Install MAVROS dependencies
 WORKDIR /home/$USERNAME
@@ -93,8 +99,8 @@ ENV USER_WORKSPACE=/home/$USERNAME/ws_dock
 WORKDIR $USER_WORKSPACE
 COPY --chown=$USER_UID:$USER_GID . src/$PROJECT_NAME
 
-# Uncomment to download and install external repos used by the project
-# RUN vcs import src < src/$PROJECT_NAME/ros.repos
+# Install the Python requirements that aren't available as rosdeps
+RUN python3 -m pip install -r $(pwd)/src/underwater_docking/requirements-build.txt
 
 # Install gstreamer
 RUN sudo apt-get -q update \
@@ -108,6 +114,9 @@ RUN sudo apt-get -q update \
     gstreamer1.0-plugins-ugly \
     gstreamer1.0-plugins-bad \
     gstreamer1.0-libav \
+    libgstreamer1.0-dev \
+    gstreamer1.0-gl \
+    libgstreamer-plugins-base1.0-dev \
     && sudo apt-get autoremove -y \
     && sudo apt-get clean -y \
     && sudo rm -rf /var/lib/apt/lists/*
@@ -116,35 +125,125 @@ RUN sudo apt-get -q update \
 WORKDIR $USER_WORKSPACE
 RUN sudo apt-get -q update \
     && sudo apt-get -q -y upgrade \
+    && vcs import src < src/underwater_docking/underwater_docking.repos \
     && rosdep update \
     && rosdep install -y --from-paths src --ignore-src -r --rosdistro ${ROS_DISTRO} \
+    && sudo apt-get install -y \
+    ros-${ROS_DISTRO}-mavros* \
     && sudo apt-get autoremove -y \
     && sudo apt-get clean -y \
     && sudo rm -rf /var/lib/apt/lists/*
 
+# Actually build workspace
 RUN . "/opt/ros/${ROS_DISTRO}/setup.sh" \
-    && catkin build \
-    && echo "source ${USER_WORKSPACE}/devel/setup.bash" >> /home/$USERNAME/.bashrc \
-    && echo "if [ -f /opt/ros/${ROS_DISTRO}/setup.bash ]; then source /opt/ros/${ROS_DISTRO}/setup.bash; fi" >> /home/$USERNAME/.bashrc
+    && colcon build
 
-FROM robot as desktop
+RUN echo "source ${USER_WORKSPACE}/install/setup.bash" >> /home/$USERNAME/.bashrc \
+    && echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /home/$USERNAME/.bashrc \
+    && echo "source $VIRTUAL_ENV/bin/activate" >> /home/$USERNAME/.bashrc \
+    && echo "\n# Ensure colcon is run in the venv\nalias colcon='python3 -m colcon'" >> /home/$USERNAME/.bashrc
+
+FROM robot AS desktop
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV USER_WORKSPACE=/home/$USERNAME/ws_dock
-WORKDIR $USER_WORKSPACE
+ENV GZ_VERSION=harmonic
 
-# Install Gazebo and RViz
-RUN sudo apt-get update \
+# Install Gazebo Harmonic: https://gazebosim.org/docs/harmonic/install_ubuntu
+# Per DL3004, use "USER root" rather than "sudo"
+#    https://github.com/hadolint/hadolint/wiki/DL3004
+USER root
+# Install custom rosdep list
+ADD --chown=root:root --chmod=0644 https://raw.githubusercontent.com/osrf/osrf-rosdep/master/gz/00-gazebo.list /etc/ros/rosdep/sources.list.d/00-gazebo.list
+RUN wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" |  tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null \
+    && apt-get -q update \
+    && apt-get -y --quiet --no-install-recommends install \
+    cppzmq-dev \
+    gz-${GZ_VERSION} \
+    python3-pexpect \
+    python3-wxgtk4.0 \
+    python3-future \
+    rapidjson-dev \
+    xterm \
+    rapidjson-dev \
+    libopencv-dev \
+    && apt-get autoremove -y \
+    && apt-get clean -y \
+    && rm -rf /var/lib/apt/lists/*
+
+USER $USERNAME
+# Clone ArduSub
+# ArduSub is installed for simulation purposes ONLY
+# When deployed onto hardware, the native installation of ArduSub
+# (on the FCU) will be used.
+WORKDIR /home/$USERNAME
+# Really should do version pinning but Sub-4.5 is waaaay behind master
+# (e.g. it doesn't know about "noble" yet)
+ARG ARDUPILOT_RELEASE=master
+RUN git clone -b ${ARDUPILOT_RELEASE} https://github.com/ArduPilot/ardupilot.git --recurse-submodules
+
+# Install ArduSub dependencies
+WORKDIR /home/$USERNAME/ardupilot
+ENV SKIP_AP_EXT_ENV=1 SKIP_AP_GRAPHIC_ENV=1 SKIP_AP_COV_ENV=1 SKIP_AP_GIT_CHECK=1
+# Do not install the STM development tools
+ENV DO_AP_STM_ENV=0
+# Do not activate the Ardupilot venv by default
+ENV DO_PYTHON_VENV_ENV=0
+RUN echo "\n# Below from ardupilot script \"install-prereqs-ubuntu.sh\"\n" >> /home/$USERNAME/.bashrc && \
+    Tools/environment_install/install-prereqs-ubuntu.sh -y
+
+# Build ArduSub
+WORKDIR /home/$USERNAME/ardupilot
+RUN modules/waf/waf-light configure --board sitl \
+    && modules/waf/waf-light build --target bin/ardusub
+
+# Clone ardupilot_gazebo code
+WORKDIR /home/$USERNAME
+RUN git clone https://github.com/ArduPilot/ardupilot_gazebo.git
+
+# Install ardupilot_gazebo plugin
+RUN [ "/bin/bash" , "-c" , " \
+    cd ardupilot_gazebo \
+    && mkdir build \
+    && cd build \
+    && cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    && make -j4" ]
+
+# Install ros_gz and other project dependencies
+WORKDIR $USER_WORKSPACE
+RUN sudo apt-get -q update \
     && sudo apt-get -q -y upgrade \
-    && curl -sSL http://get.gazebosim.org | sh \
-    && sudo apt-get -q install --no-install-recommends -y \
-    ros-$ROS_DISTRO-gazebo* \
-    ros-$ROS_DISTRO-rviz \
+    && rosdep update \
+    && rosdep install -y --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} \
+    && sudo apt-get install -y \
+    ros-${ROS_DISTRO}-ros-gz \
     && sudo apt-get autoremove -y \
     && sudo apt-get clean -y \
     && sudo rm -rf /var/lib/apt/lists/*
 
-FROM desktop as desktop-nvidia
+# For users that build this on a laptop or system with limited RAM,
+# Modify the 'colcon build' line to be 'MAKEFLAGS="-j1 -l1" colcon build'
+# This will limit the amount of RAM that colcon is allowed to use
+RUN . "/opt/ros/${ROS_DISTRO}/setup.sh" \
+    && colcon build
+
+# Setup the simulation environment variables
+RUN  <<EOT cat >> /home/$USERNAME/.bashrc
+
+# Add results of ArduSub build
+export PATH=\$HOME/ardupilot/build/sitl/bin:\$PATH
+
+# Optional: add autotest to the PATH, helpful for running sim_vehicle.py
+export PATH=\$HOME/ardupilot/Tools/autotest:\$PATH
+
+# Add ardupilot_gazebo plugin
+export GZ_SIM_SYSTEM_PLUGIN_PATH=\$HOME/ardupilot_gazebo/build:\$GZ_SIM_SYSTEM_PLUGIN_PATH
+
+# Add ardupilot_gazebo models and worlds
+export GZ_SIM_RESOURCE_PATH=\$HOME/ardupilot_gazebo/models:\$HOME/ardupilot_gazebo/worlds:\$GZ_SIM_RESOURCE_PATH
+EOT
+
+FROM desktop AS desktop-nvidia
 
 # Install NVIDIA software
 RUN sudo apt-get update \

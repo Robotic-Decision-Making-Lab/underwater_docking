@@ -1,7 +1,0 @@
-# Development tools not required for project installation
-pre-commit
-mypy
-pipenv
-autopep8
-isort
-pydocstyle

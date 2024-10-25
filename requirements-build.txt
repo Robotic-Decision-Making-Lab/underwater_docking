@@ -1,0 +1,2 @@
+# Development tools not required for project installation
+qtm

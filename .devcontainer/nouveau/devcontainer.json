@@ -2,9 +2,9 @@
   "name": "nouveau",
   "dockerFile": "Dockerfile",
   "context": "../..",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/home/ros/ws_dock/src/underwater_docking,type=bind",
-  "workspaceFolder": "/home/ros/ws_dock/src/underwater_docking",
-  "remoteUser": "ros",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/ubuntu/ws_dock/src/underwater_docking,type=bind",
+  "workspaceFolder": "/home/ubuntu/ws_dock/src/underwater_docking",
+  "remoteUser": "ubuntu",
   "runArgs": [
     "--network=host",
     "--cap-add=SYS_PTRACE",
@@ -22,19 +22,22 @@
   },
   "customizations": {
     "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/home/ubuntu/.venv/underwater_docking/bin/python",
+        "python.autoComplete.extraPaths": ["${workspaceFolder}/install/"],
+        "python.analysis.extraPaths": ["${workspaceFolder}/install/"]
+      },
       "extensions": [
         "ms-azuretools.vscode-docker",
         "ms-python.python",
         "njpwerner.autodocstring",
-        "ms-vscode.cpptools",
         "redhat.vscode-xml",
         "redhat.vscode-yaml",
         "smilerobotics.urdf",
-        "DavidAnson.vscode-markdownlint",
         "esbenp.prettier-vscode",
-        "xaver.clang-format",
         "charliermarsh.ruff",
-        "ms-python.black-formatter"
+        "josetr.cmake-language-support-vscode",
+        "unifiedjs.vscode-mdx"
       ]
     }
   }

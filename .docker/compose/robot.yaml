@@ -1,0 +1,21 @@
+services:
+  underwater_docking:
+    image: ghcr.io/robotic-decision-making-lab/underwater_docking:jazzy-robot
+    build:
+      dockerfile: .docker/Dockerfile
+      target: robot
+      context: ../../
+    network_mode: host
+    privileged: true
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    volumes:
+      - /dev:/dev
+      - /run/user/1000:/run/user/1000
+      - type: bind
+        source: ../../
+        target: /home/ubuntu/ws_dock/src/underwater_docking
+    command: tail -f /dev/null
