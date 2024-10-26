@@ -2,7 +2,7 @@
 # Dockerfile for *-robot development container
 #
 ARG UNDERWATER_DOCKING_GITHUB_REPO=Robotic-Decision-Making-Lab/underwater_docking
-ARG ROS_DISTRO=rolling
+ARG ROS_DISTRO=jazzy
 FROM ${UNDERWATER_DOCKING_GITHUB_REPO}:${ROS_DISTRO}-robot
 
 # Install ROS dependencies
