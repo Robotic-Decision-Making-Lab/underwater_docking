@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <launch>
-  <arg name="fcu_url" default="udp://:14550@127.0.0.1:14549"/>
+  <arg name="fcu_url" default="udp://:14540@127.0.0.1:14550"/>
   <arg name="gcs_url" default="udp://:14549@127.0.0.1:14548"/>
   <arg name="video_udp_port" default="5600"/>
   <arg name="system_id" default="255"/>
@@ -46,35 +46,38 @@
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="base_footprint_to_base_link" args="0 0 0 0 0 0 base_footprint base_link" />
 
-  <node pkg="tf2_ros" type="static_transform_publisher" name="dock_to_map" args="5.0 5.0 5.0 0 0 0 dock map" />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="dock_to_map" args="0 0 0 0 0 0 dock map" />
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="marker2_to_dock_tf_broadcaster" args="0 0 0 0 0 0 marker_2 dock" />
+
 
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker3_to_map_tf_broadcaster" args="0.0 -0.17 0.434 0 1.571 -1.571 marker_3 map" /> -->
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker3_to_map_tf_broadcaster" args="0.035 -0.17 0.334 0 1.571 -1.571 marker_3 map" /> -->
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker3_to_map_tf_broadcaster" args="0.015 -0.24 0.334 0 1.571 -1.571 marker_3 map" /> -->
-  <node pkg="tf2_ros" type="static_transform_publisher" name="marker3_to_dock_tf_broadcaster" args="0.015 -0.24 0.334 0 1.571 -1.571 marker_3 dock" />
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker3_to_dock_tf_broadcaster" args="0.015 -0.24 0.334 0 1.571 -1.571 marker_3 dock" /> -->
 
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="base_link_to_base_footprint" args="0 0 0 0 0 0 base_link base_footprint" /> -->
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_marker1_tf_broadcaster" args="1 0 0 0 0 0 map marker_1" /> -->
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker1_to_map_tf_broadcaster" args="0 0 0 0 1.571 -1.571 marker_1 map" /> -->
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker7_to_map_tf_broadcaster" args="0.225 0.021 0.434 0 1.571 -1.571 marker_7 map" /> -->
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker7_to_map_tf_broadcaster" args="0.33 -0.10 0.434 0 1.571 -1.571 marker_7 map" /> -->
-  <node pkg="tf2_ros" type="static_transform_publisher" name="marker7_to_marker3_tf_broadcaster" args="0.225 0.19 0.0 0 0 0 marker_7 marker_3" />
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker7_to_marker3_tf_broadcaster" args="0.225 0.19 0.0 0 0 0 marker_7 marker_3" /> -->
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker7_to_map_tf_broadcaster" args="0.1869 0.021 0.434 0 1.571 -1.571 marker_7 map" /> -->
 
-  <node pkg="tf2_ros" type="static_transform_publisher" name="marker8_to_marker7_tf_broadcaster" args="-0.3019 -0.036 0 0 0 0 marker_8 marker_7" />
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker8_to_marker7_tf_broadcaster" args="-0.3019 -0.036 0 0 0 0 marker_8 marker_7" /> -->
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker8_to_marker7_tf_broadcaster" args="-0.35 0.036 0 0 0 0 marker_8 marker_7" /> -->
 
-  <node pkg="tf2_ros" type="static_transform_publisher" name="marker2_to_marker8_tf_broadcaster" args="-0.301 0.345 -0.868 0 0 0 marker_2 marker_8" />
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker2_to_marker8_tf_broadcaster" args="-0.301 0.345 -0.868 0 0 0 marker_2 marker_8" /> -->
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker2_to_marker8_tf_broadcaster" args="-0.301 0.345 -0.88 0 0 0 marker_2 marker_8" /> -->
 
-  <node pkg="tf2_ros" type="static_transform_publisher" name="marker11_to_marker2_tf_broadcaster" args="0.835 0.002 0 0 0 0 marker_11 marker_2" />
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker11_to_marker2_tf_broadcaster" args="0.835 0.002 0 0 0 0 marker_11 marker_2" /> -->
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker11_to_marker2_tf_broadcaster" args="0.88 0.002 0 0 0 0 marker_11 marker_2" /> -->
 
-  <node pkg="tf2_ros" type="static_transform_publisher" name="marker9_to_marker11_tf_broadcaster" args="-0.004 -0.705 0 0 0 0 marker_9 marker_11" />
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker9_to_marker11_tf_broadcaster" args="-0.004 -0.705 0 0 0 0 marker_9 marker_11" /> -->
 
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker10_to_marker9_tf_broadcaster" args="-0.8535 -1.799 0 0 0 0 marker_10 marker_9" /> -->
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker10_to_marker9_tf_broadcaster" args="-0.88 0 0 0 0 0 marker_10 marker_9" /> -->
-  <node pkg="tf2_ros" type="static_transform_publisher" name="marker4_to_marker9_tf_broadcaster" args="-0.75 0 0 0 0 0 marker_4 marker_9" />
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker4_to_marker9_tf_broadcaster" args="-0.75 0 0 0 0 0 marker_4 marker_9" /> -->
 
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker8_to_marker7_tf_broadcaster" args="-0.3019 -0.036 0 0 0 0 marker_8 marker_7 " />
   <node pkg="tf2_ros" type="static_transform_publisher" name="marker2_to_marker7_tf_broadcaster" args="-0.6045 0.381 -0.868 0 0 0 marker_2 marker_7 " />

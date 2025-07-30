@@ -170,7 +170,7 @@ class Manager:
         event_ids = self.thruster_params_backup.keys()
         j = 33
         for i in event_ids:
-            self.thruster_params_backup[i] = ParamValue(real=j)
+            self.thruster_params_backup[i] = ParamValue(integer=j)
             j += 1
 
         if self.params_successfully_backed_up:
@@ -256,8 +256,8 @@ class Manager:
             # This disables the arming and failsafe features, but now lets us send PWM
             # values to the thrusters without any mixing
             try:
-                for param in passthrough_params.values():
-                    param.real = 1.0
+                for ind, param in enumerate(passthrough_params.values()):
+                    param.integer = 1
             except AttributeError:
                 response.success = False
                 response.message = (

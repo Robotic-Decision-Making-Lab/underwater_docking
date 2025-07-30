@@ -2,6 +2,7 @@ import os
 import time
 import numpy as np
 import sys
+from casadi import evalf
 
 sys.path.insert(0, "/home/ros/ws_dock/src/underwater_docking/docking_control/src")
 
@@ -25,7 +26,7 @@ class MPControl:
         mpc_yaml = cwd + "/../config/mpc_bluerov2_heavy.yaml"
 
         # Change these values as desired
-        self.tolerance = 0.08
+        self.tolerance = 0.05
         self.yaw_tolerance = 0.05
         self.path_length = 0.0
         self.p_times = [0]
@@ -33,7 +34,7 @@ class MPControl:
         self.auv = AUV.load_params(auv_yaml)
         self.mpc = MPC.load_params(auv_yaml, mpc_yaml)
 
-        self.thrusters = self.mpc.thrusters
+        self.control_axes = self.mpc.control_axes
         self.comp_time = 0.0
         self.time_id = 0
         self.dt = self.mpc.dt
@@ -160,13 +161,13 @@ class MPControl:
         process_t0 = time.perf_counter()
         self.distance = np.linalg.norm(x0[0:3, :] - xr[0:3, :])
 
-        x0[3:6, :] = self.wrap_pi2negpi(x0[3:6, :])
+        # x0[3:6, :] = self.wrap_pi2negpi(x0[3:6, :])
         # xr[5, :] += np.pi
-        xr[3:6, :] = self.wrap_pi2negpi(xr[3:6, :])
+        # xr[3:6, :] = self.wrap_pi2negpi(xr[3:6, :])
 
-        x0[6:12, :] = np.clip(
-            x0[6:12, 0], self.mpc.xmin[6:12], self.mpc.xmax[6:12]
-        ).reshape(-1, 1)
+        # x0[6:12, :] = np.clip(
+        #     x0[6:12, 0], self.mpc.xmin[6:12], self.mpc.xmax[6:12]
+        # ).reshape(-1, 1)
 
         self.yaw_diff = abs((((x0[5, :] - xr[5, :]) + np.pi) % (2 * np.pi)) - np.pi)[0]
         self.ang_diff = np.linalg.norm(
@@ -178,15 +179,12 @@ class MPControl:
             return np.zeros((8, 1)), np.zeros((6, 1)), True
 
         else:
-            # nu_w = self.compute_wave_particle_vel(x0[0:6, :],
-            #                                       self.t_span[self.time_id])
-            # rospy.logwarn(f"Wave Info: {nu_w}")
-            # self.auv.nu_w = nu_w
             x0[3:5, :] = 0.0
             x0[9:11, :] = 0.0
-            x0 = np.round(x0, 2)
-            xr = np.round(xr, 2)
             u, wrench = self.mpc.run_mpc(x0, xr)
+
+            # x_dot_sim = self.auv.compute_nonlinear_dynamics(x=x0, u=wrench)
+            # x_sim = x0 + evalf(x_dot_sim).full() * self.dt
 
             self.comp_time = time.perf_counter() - process_t0
 

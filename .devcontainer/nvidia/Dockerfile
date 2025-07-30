@@ -11,6 +11,15 @@ COPY --chown=$USER_UID:$USER_GID . src/$PROJECT_NAME
 
 RUN ls src/$PROJECT_NAME
 
+RUN sudo rm /etc/apt/sources.list.d/ros1-latest.list \
+  && sudo rm /usr/share/keyrings/ros1-latest-archive-keyring.gpg
+
+RUN sudo apt-get update \
+  && sudo apt-get install -y ca-certificates curl
+
+RUN sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+
+
 RUN sudo apt-get -q update \
     && sudo apt-get -q -y upgrade \
     && rosdep update \

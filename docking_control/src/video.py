@@ -46,11 +46,11 @@ class Video:
         self._frame = None
 
         # UDP video stream (:5600)
-        self.video_source = "udpsrc port={}".format(self.port)
+        # self.video_source = "udpsrc port={}".format(self.port)
 
         # RTSP video stream
-        # self.video_source = "rtspsrc location=rtsp://192.168.2.2:8554/" + \
-        #     "video_stream__dev_video2 latency=0"
+        self.video_source = "rtspsrc location=rtsp://192.168.2.2:8554/" + \
+            "video_stream__dev_video2 latency=0"
 
         # [Rasp raw image](http://picamera.readthedocs.io/en/release-0.7/recipes2.html#raw-image-capture-yuv-format)
         # Cam -> CSI-2 -> H264 Raw (YUV 4-4-4 (12bits) I420)
