@@ -476,8 +476,8 @@ class BlueROV2:
                 mpc_op.data = [float(forces[i][0]) for i in range(8)]
                 self.mpc_output.publish(mpc_op)
 
-                pwm = self.thrust_to_pwm(forces)
-                # pwm = self.calculate_pwm_from_thrust_curve(forces.flatten())
+                # pwm = self.thrust_to_pwm(forces)
+                pwm = self.calculate_pwm_from_thrust_curve(forces.flatten())
 
                 for i in range(len(pwm)):
                     if pwm[i] > self.deadzone_pwm[0] and pwm[i] < self.deadzone_pwm[1]:
@@ -486,11 +486,14 @@ class BlueROV2:
                 for i in range(len(pwm)):
                     pwm[i] = max(min(pwm[i], self.max_pwm_auto), self.min_pwm_auto)
 
-                for _ in range(len(pwm), 18):
-                    pwm.append(OverrideRCIn.CHAN_NOCHANGE)
+                override_pwm = [OverrideRCIn.CHAN_NOCHANGE for _ in range(18)]
 
-                self.mpc_pwm_pub.publish(pwm)
-                self.control_pub.publish(pwm)
+                # Store pwm values in the override message between indices 8-15
+                override_pwm[0:6] = pwm[0:6]
+                override_pwm[15:17] = pwm[6:8]
+
+                # self.mpc_pwm_pub.publish(override_pwm)
+                self.control_pub.publish(override_pwm)
         except Exception as e:
             rospy.logerr_throttle(
                 10, "[BlueROV2][auto_control] Error in MPC Computation" + str(e)

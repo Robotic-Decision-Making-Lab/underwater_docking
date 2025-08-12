@@ -257,7 +257,10 @@ class Manager:
             # values to the thrusters without any mixing
             try:
                 for ind, param in enumerate(passthrough_params.values()):
-                    param.integer = 1
+                    if ind < 6:
+                        param.integer = 51 + ind
+                    else:
+                        param.integer = 65 + (ind - 6)
             except AttributeError:
                 response.success = False
                 response.message = (
