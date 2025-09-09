@@ -15,7 +15,7 @@ from tf2_ros.transform_listener import TransformListener
 from mavros_msgs.srv import CommandBool
 from std_srvs.srv import SetBool
 from scipy.spatial.transform import Rotation as R
-
+from copy import deepcopy
 import sys
 
 sys.path.insert(0, "/home/ros/ws_dock/src/underwater_docking/docking_control/src")
@@ -33,10 +33,10 @@ class BlueROV2:
 
         # Set up pulse width modulation (pwm) values
         self.neutral_pwm = 1500
-        self.max_pwm_auto = 1600
-        self.min_pwm_auto = 1400
-        self.max_pwm_manual = 1700
-        self.min_pwm_manual = 1300
+        self.max_pwm_auto = 1700
+        self.min_pwm_auto = 1300
+        self.max_pwm_manual = 1800
+        self.min_pwm_manual = 1200
         self.max_possible_pwm = 1900
         self.min_possible_pwm = 1100
 
@@ -117,12 +117,12 @@ class BlueROV2:
         self.pressure_sub = rospy.Subscriber(
             "/mavros/imu/static_pressure", FluidPressure, self.pressure_cb
         )
+        # self.rov_odom_sub = rospy.Subscriber(
+        #     "/mavros/local_position/odom", Odometry, self.rov_odom_cb
+        # )
         self.rov_pose_sub = rospy.Subscriber(
             "/docking_control/vision_pose/pose", PoseStamped, self.rov_pose_cb
         )
-        # self.rov_vel_sub = rospy.Subscriber(
-        #     "/mavros/local_position/velocity_body", TwistStamped, self.rov_vel_cb
-        # )
 
     def initialize_publishers(self):
         # Set up publishers
@@ -175,6 +175,124 @@ class BlueROV2:
         except Exception:
             rospy.logerr_throttle(
                 10, "[BlueROV2][pressure_cb] Not receiving pressure readings"
+            )
+
+    def rov_odom_cb(self, odom):
+        """
+        Callback to receive odometry, transform it from ENU/FLU to NED/FRD,
+        store it in a 12x1 state vector, and republish.
+
+        Input Odom Message:
+        - Pose (Position, Orientation): In a world-fixed ENU (East-North-Up) frame.
+        - Twist (Velocities): In a body-fixed FLU (X-Forward, Y-Left, Z-Up) frame.
+
+        Output State Vector (self.rov_odom):
+        - Position: In a world-fixed NED (North-East-Down) frame.
+        - Orientation: Euler angles of body relative to the NED frame.
+        - Velocities: In a body-fixed FRD (X-Forward, Y-Right, Z-Down) frame.
+        """
+        try:
+            # 1. --- Extract Data from Input Message ---
+            # Pose is in the ENU world frame
+            pos_enu = np.array([
+                odom.pose.pose.position.x,
+                odom.pose.pose.position.y,
+                odom.pose.pose.position.z
+            ])
+            # Orientation of body (FLU) relative to ENU world frame
+            quat_enu_to_body = np.array([
+                odom.pose.pose.orientation.x,
+                odom.pose.pose.orientation.y,
+                odom.pose.pose.orientation.z,
+                odom.pose.pose.orientation.w
+            ])
+
+            # Velocities are in the body-fixed FLU frame
+            linear_vel_flu = np.array([
+                odom.twist.twist.linear.x,
+                odom.twist.twist.linear.y,
+                odom.twist.twist.linear.z
+            ])
+            angular_vel_flu = np.array([
+                odom.twist.twist.angular.x,
+                odom.twist.twist.angular.y,
+                odom.twist.twist.angular.z
+            ])
+
+            # 2. --- Define Required Transformation Rotations ---
+            # Rotation from world-fixed ENU to world-fixed NED frame
+            # x_ned = y_enu,  y_ned = x_enu,  z_ned = -z_enu
+            rot_enu_to_ned = R.from_matrix([
+                [0, 1, 0],
+                [1, 0, 0],
+                [0, 0, -1]
+            ])
+
+            # Rotation from body-fixed FLU to body-fixed FRD frame
+            # x_frd = x_flu,  y_frd = -y_flu, z_frd = -z_flu
+            rot_flu_to_frd = R.from_matrix([
+                [1,  0,  0],
+                [0, -1,  0],
+                [0,  0, -1]
+            ])
+
+            # 3. --- Perform Transformations ---
+            # A) Transform Pose from ENU to NED
+            pos_ned = rot_enu_to_ned.apply(pos_enu)
+
+            # B) Transform Orientation from ENU->Body to NED->Body
+            # We have the orientation of the body relative to the ENU frame.
+            # We need the orientation of the body relative to the NED frame.
+            # Logical Chain: NED -> ENU -> Body
+            # Math: R_ned_to_body = R_enu_to_body * R_ned_to_enu
+            # R_ned_to_enu is the inverse of R_enu_to_ned
+            rot_enu_to_body = R.from_quat(quat_enu_to_body)
+            rot_ned_to_body = rot_enu_to_body * rot_enu_to_ned.inv()
+
+            quat_ned = rot_ned_to_body.as_quat()
+            euler_ned = rot_ned_to_body.as_euler("xyz", degrees=False) # roll, pitch, yaw
+
+            # C) Transform Velocities from FLU body frame to FRD body frame
+            linear_vel_frd = rot_flu_to_frd.apply(linear_vel_flu)
+            angular_vel_frd = rot_flu_to_frd.apply(angular_vel_flu)
+
+            # 4. --- Store Final Values in 12x1 State Vector ---
+            self.rov_odom = np.zeros((12, 1))
+            self.rov_odom[0:3, 0] = pos_ned
+            self.rov_odom[3:6, 0] = euler_ned
+            self.rov_odom[6:9, 0] = linear_vel_frd
+            self.rov_odom[9:12, 0] = angular_vel_frd
+
+            # 5. --- Republish Transformed Odometry ---
+            # This is useful for visualization in RViz and for other nodes
+            # that expect a standard NED/FRD convention.
+            odom_ned = Odometry()
+            odom_ned.header.stamp = odom.header.stamp
+            odom_ned.header.frame_id = "map_ned"       # World frame is now NED
+            odom_ned.child_frame_id = odom.child_frame_id # Body frame name is unchanged
+
+            # Populate pose with NED data
+            odom_ned.pose.pose.position.x = pos_ned[0]
+            odom_ned.pose.pose.position.y = pos_ned[1]
+            odom_ned.pose.pose.position.z = pos_ned[2]
+            odom_ned.pose.pose.orientation.x = quat_ned[0]
+            odom_ned.pose.pose.orientation.y = quat_ned[1]
+            odom_ned.pose.pose.orientation.z = quat_ned[2]
+            odom_ned.pose.pose.orientation.w = quat_ned[3]
+
+            # Populate twist with FRD data (still in the body frame)
+            odom_ned.twist.twist.linear.x = linear_vel_frd[0]
+            odom_ned.twist.twist.linear.y = linear_vel_frd[1]
+            odom_ned.twist.twist.linear.z = linear_vel_frd[2]
+            odom_ned.twist.twist.angular.x = angular_vel_frd[0]
+            odom_ned.twist.twist.angular.y = angular_vel_frd[1]
+            odom_ned.twist.twist.angular.z = angular_vel_frd[2]
+
+            self.rov_odom_pub.publish(odom_ned)
+
+        except Exception as e:
+            rospy.logerr_throttle(
+                10, f"[BlueROV2][rov_odom_cb] Error processing odometry: {e}"
             )
 
     def rov_pose_cb(self, pose):
@@ -243,29 +361,6 @@ class BlueROV2:
         except Exception:
             rospy.logerr_throttle(
                 10, "[BlueROV2][rov_pose_cb] Not receiving ROV's Position"
-            )
-
-    def rov_vel_cb(self, vel):
-        """Callback function for the ROV's velocity
-
-        Args:
-            vel: TwistStamped message
-        """
-        try:
-            self.rov_twist = np.zeros((6, 1))
-            self.rov_twist[0][0] = vel.twist.linear.x
-            self.rov_twist[1][0] = -vel.twist.linear.y
-            self.rov_twist[2][0] = -vel.twist.linear.z
-            # self.rov_twist[3][0] = vel.twist.angular.x
-            # self.rov_twist[4][0] = -vel.twist.angular.y
-            self.rov_twist[5][0] = -vel.twist.angular.z
-            self.rov_twist[3][0] = 0.0
-            self.rov_twist[4][0] = 0.0
-            # self.rov_twist[5][0] = 0.
-            # print(self.rov_twist)
-        except Exception:
-            rospy.logerr_throttle(
-                10, "[BlueROV2][rov_vel_cb] Not receiving ROV's velocity"
             )
 
     def store_sub_data(self, data, key):
@@ -427,17 +522,15 @@ class BlueROV2:
             self.mode_flag = "manual"
             return
 
-        # if self.rov_pose is None or self.rov_twist is None:
         if self.rov_odom is None:
             rospy.logerr_throttle(
-                10, "[BlueROV2][auto_contol] ROV odom not initialized"
+                10, "[BlueROV2][auto_control] ROV odom not initialized"
             )
             return
         else:
-            # self.rov_odom = np.vstack((self.rov_pose, self.rov_twist))
             x0 = self.rov_odom
 
-        xr = np.array([[-1.5, 0., 0., 0., 0., -1.57, 0., 0., 0., 0., 0., 0.]]).T
+        xr = np.array([[-1.5, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]]).T
 
         try:
             forces, wrench, converge_flag = self.mpc.run_mpc(x0, xr)
@@ -490,9 +583,9 @@ class BlueROV2:
 
                 # Store pwm values in the override message between indices 8-15
                 override_pwm[0:6] = pwm[0:6]
-                override_pwm[15:17] = pwm[6:8]
+                override_pwm[14:16] = pwm[6:8]
 
-                # self.mpc_pwm_pub.publish(override_pwm)
+                self.mpc_pwm_pub.publish(override_pwm)
                 self.control_pub.publish(override_pwm)
         except Exception as e:
             rospy.logerr_throttle(

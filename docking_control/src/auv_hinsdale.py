@@ -4,7 +4,6 @@ from casadi import (
     cos,
     diag,
     fabs,
-    horzcat,
     if_else,
     inv,
     mtimes,
@@ -33,6 +32,7 @@ class AUV(object):
         self.cob = vehicle_dynamics["cob"]
         self.cog_to_cob = self.cog - self.cob
         self.neutral_bouy = vehicle_dynamics["neutral_bouy"]
+        self.linear_model = {"A": SX.zeros((12, 12)), "B": SX.zeros((12, 8))}
         self.curr_timestep = 0.0
         self.ocean_current_data = []
 
@@ -103,17 +103,6 @@ class AUV(object):
         # Combined rotation matrix (ZYX convention)
         rot_mtx = mtimes(rot_z, mtimes(rot_y, rot_x))
 
-        # rot_mtx = SX.eye(3)
-        # rot_mtx[0, 0] = cos(x[5]) * cos(x[4])
-        # rot_mtx[0, 1] = -sin(x[5]) * cos(x[3]) + cos(x[5]) * sin(x[4]) * sin(x[3])
-        # rot_mtx[0, 2] = sin(x[5]) * sin(x[3]) + cos(x[5]) * cos(x[3]) * sin(x[4])
-        # rot_mtx[1, 0] = sin(x[5]) * cos(x[4])
-        # rot_mtx[1, 1] = cos(x[5]) * cos(x[3]) + sin(x[3]) * sin(x[4]) * sin(x[5])
-        # rot_mtx[1, 2] = -cos(x[5]) * sin(x[3]) + sin(x[4]) * sin(x[5]) * cos(x[3])
-        # rot_mtx[2, 0] = -sin(x[4])
-        # rot_mtx[2, 1] = cos(x[4]) * sin(x[3])
-        # rot_mtx[2, 2] = cos(x[4]) * cos(x[3])
-
         t_mtx = SX.eye(3)
         t_mtx[0, 1] = sin(x[3]) * tan(x[4])
         t_mtx[0, 2] = cos(x[3]) * tan(x[4])
@@ -148,16 +137,6 @@ class AUV(object):
         coriolis_force[3:6, 0:3] = -c1_skew
         coriolis_force[3:6, 3:6] = -c2_skew
 
-        # skew_v2 = skew(v2)
-        # skew_I_v2 = skew(mtimes(self.inertial_terms, v2))
-
-        # coriolis_force = SX.zeros((6, 6))
-        # coriolis_force[0:3, 0:3] = self.vehicle_mass * skew_v2
-        # coriolis_force[0:3, 3:6] = -self.vehicle_mass * (
-        #     mtimes(skew_v2, self.r_gb_skew)
-        # )
-        # coriolis_force[3:6, 0:3] = self.vehicle_mass * (mtimes(self.r_gb_skew, skew_v2))
-        # coriolis_force[3:6, 3:6] = -skew_I_v2
         return coriolis_force
 
     def compute_C_A_force(self, v):
@@ -179,13 +158,7 @@ class AUV(object):
         coriolis_force[0:3, 3:6] = -c1_skew
         coriolis_force[3:6, 0:3] = -c1_skew
         coriolis_force[3:6, 3:6] = -c2_skew
-        # A_11 = -self.added_mass[0:3, 0:3]
-        # A_22 = -self.added_mass[3:6, 3:6]
 
-        # coriolis_force = SX.zeros((6, 6))
-        # coriolis_force[0:3, 3:6] = skew(mtimes(A_11, v1))
-        # coriolis_force[3:6, 0:3] = skew(mtimes(A_11, v1))
-        # coriolis_force[3:6, 3:6] = skew(mtimes(A_22, v2))
         return coriolis_force
 
     def compute_damping_force(self, v):
@@ -210,18 +183,6 @@ class AUV(object):
             restorive_force[0:3, 0] = rot_t @ (fg + fb)
             restorive_force[3:6, 0] = cross(self.cog, (rot_t @ fg)) + cross(self.cob, (rot_t @ fb))
             restorive_force *= -1
-
-            # restorive_force = vertcat(
-            #     (self.W - self.B) * sin(x[4]),
-            #     -(self.W - self.B) * cos(x[4]) * sin(x[3]),
-            #     -(self.W - self.B) * cos(x[4]) * cos(x[3]),
-            #     -(self.cog[1] * self.W - self.cob[1] * self.B) * cos(x[4]) * cos(x[3])
-            #     + (self.cog[2] * self.W - self.cob[2] * self.B) * cos(x[4]) * sin(x[3]),
-            #     (self.cog[2] * self.W - self.cob[2] * self.B) * sin(x[4])
-            #     + (self.cog[0] * self.W - self.cob[0] * self.B) * cos(x[4]) * cos(x[3]),
-            #     -(self.cog[0] * self.W - self.cob[0] * self.B) * cos(x[4]) * sin(x[3])
-            #     - (self.cog[1] * self.W - self.cob[1] * self.B) * sin(x[4]),
-            # )
         return restorive_force
 
     def compute_nonlinear_dynamics(

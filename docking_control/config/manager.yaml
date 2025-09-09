@@ -9,11 +9,11 @@ blue_manager:
       rates: [200.0, 200.0]
       request_interval: 30.0
     ekf_origin:
-      latitude: 44.65870
-      longitude: -124.06556
+      latitude: 44.5518664
+      longitude:  -123.2519654
       altitude: 0.0
     home_position:
-      latitude: 44.65870
-      longitude: -124.06556
+      latitude: 44.5518664
+      longitude: -123.2519654
       altitude: 0.0
       request_interval: 30.0

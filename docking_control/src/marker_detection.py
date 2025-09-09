@@ -33,7 +33,7 @@ class Aruco:
         relative to the marker, and then computes the ROV's pose in the map frame.
         """
         # --- Parameters ---
-        self.desired_markers = [2, 3, 4, 7, 8, 9, 10, 11]
+        self.desired_markers = [2, 3, 4, 7, 8, 9, 10, 11, 14]
         self.marker_size = {
             1: 0.20,
             2: 0.10,
@@ -44,6 +44,7 @@ class Aruco:
             9: 0.10,
             10: 0.10,
             11: 0.10,
+            14: 0.1524,  # 6 inches in meters
         }
         self.filter_len = 20
 
