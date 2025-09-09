@@ -16,7 +16,7 @@ RUN apt-get -q update \
     git \
     sudo \
     clang \
-    clang-format-12 \
+    clang-format-14 \
     clang-tidy \
     clang-tools \
     python3-pip \
@@ -161,6 +161,6 @@ RUN sudo apt-get update \
     && sudo rm -rf /var/lib/apt/lists/*
 
 # Env vars for the nvidia-container-runtime.
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES graphics,utility,compute
-ENV QT_X11_NO_MITSHM 1
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=graphics,utility,compute
+ENV QT_X11_NO_MITSHM=1

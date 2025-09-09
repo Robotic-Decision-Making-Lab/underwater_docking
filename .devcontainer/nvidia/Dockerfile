@@ -5,6 +5,9 @@ FROM ghcr.io/robotic-decision-making-lab/underwater_docking:noetic-desktop-nvidi
 # add new dependencies during development
 ENV USERNAME=ros
 ENV USER_WORKSPACE=/home/$USERNAME/ws_dock
+# Set UID and GID for the user 'ros'
+ENV USER_UID=1000
+ENV USER_GID=1000
 WORKDIR $USER_WORKSPACE
 
 COPY --chown=$USER_UID:$USER_GID . src/$PROJECT_NAME

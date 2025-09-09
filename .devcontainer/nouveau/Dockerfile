@@ -5,6 +5,9 @@ FROM ghcr.io/robotic-decision-making-lab/underwater_docking:noetic-desktop
 # add new dependencies during development
 ENV USERNAME=ros
 ENV USER_WORKSPACE=/home/$USERNAME/ws_dock
+# Define UID and GID for chown operations
+ENV USER_UID=1000
+ENV USER_GID=1000
 WORKDIR $USER_WORKSPACE
 
 COPY --chown=$USER_UID:$USER_GID . src/$PROJECT_NAME
