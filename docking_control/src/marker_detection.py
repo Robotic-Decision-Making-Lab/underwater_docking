@@ -4,7 +4,6 @@ import yaml
 import rospy
 import os
 import cv2
-import math
 import numpy as np
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
@@ -89,7 +88,11 @@ class Aruco:
         """Initializes ROS subscribers and publishers."""
         # Increased buff_size for high-res images to prevent lag
         self.image_sub = rospy.Subscriber(
-            "/BlueROV2/video", Image, self.image_callback, queue_size=1, buff_size=2**24
+            "/BlueROV2/video",
+            Image,
+            self.image_callback,
+            queue_size=1,
+            buff_size=2**24,
         )
         self.image_pub = rospy.Publisher(
             "/docking_control/marker_detection", Image, queue_size=1
@@ -127,18 +130,23 @@ class Aruco:
                 if marker_id in self.desired_markers:
                     # Calculate the area of the detected marker contour
                     area = cv2.contourArea(corners[i][0])
-                    valid_markers.append({"id": marker_id, "corners": corners[i], "area": area})
+                    valid_markers.append(
+                        {"id": marker_id, "corners": corners[i], "area": area}
+                    )
 
             # Draw all detected markers on the frame
             cv2.aruco.drawDetectedMarkers(frame, corners, ids)
 
             if valid_markers:
-                # Select the marker with the largest area on screen (closest/most central)
+                # Select the marker with the largest area on screen
+                # (closest/most central)
                 best_marker = max(valid_markers, key=lambda m: m["area"])
 
                 # Estimate pose using only the single best marker
                 try:
-                    self.estimate_and_publish_pose(frame, best_marker["id"], best_marker["corners"])
+                    self.estimate_and_publish_pose(
+                        frame, best_marker["id"], best_marker["corners"]
+                    )
                 except Exception as e:
                     rospy.logerr_throttle(2, f"[Aruco] Error in pose estimation: {e}")
 
@@ -148,11 +156,10 @@ class Aruco:
         center = (width // 2, height // 2)
         cv2.circle(frame, center, 5, (0, 255, 0), -1)
         cv2.imshow("Marker Detection", frame)
-        cv2.waitKey(1) # This is crucial for the window to update
+        cv2.waitKey(1)  # This is crucial for the window to update
 
         # Also publish the annotated image to a ROS topic
         self.publish_annotated_image(frame)
-
 
     def estimate_and_publish_pose(self, frame, marker_id, marker_corners):
         """Estimates pose from a single marker and publishes it."""
@@ -162,11 +169,15 @@ class Aruco:
             return
 
         # Define the 3D points of the marker in its own coordinate system
-        marker_points = np.array([
-                [-marker_size / 2,  marker_size / 2, 0],
-                [ marker_size / 2,  marker_size / 2, 0],
-                [ marker_size / 2, -marker_size / 2, 0],
-                [-marker_size / 2, -marker_size / 2, 0]], dtype=np.float32)
+        marker_points = np.array(
+            [
+                [-marker_size / 2, marker_size / 2, 0],
+                [marker_size / 2, marker_size / 2, 0],
+                [marker_size / 2, -marker_size / 2, 0],
+                [-marker_size / 2, -marker_size / 2, 0],
+            ],
+            dtype=np.float32,
+        )
 
         # Get pose of marker in camera frame
         _, rvec, tvec = cv2.solvePnP(
@@ -188,8 +199,12 @@ class Aruco:
         # Get required transforms from the TF tree
         try:
             # Use rospy.Time(0) to get the latest available transform
-            tf_base_to_cam_msg = self.tf_buffer.lookup_transform("base_link", "camera_link", rospy.Time(0), rospy.Duration(0.1))
-            tf_marker_to_map_msg = self.tf_buffer.lookup_transform(f"marker_{marker_id}", "map", rospy.Time(0), rospy.Duration(0.1))
+            tf_base_to_cam_msg = self.tf_buffer.lookup_transform(
+                "base_link", "camera_link", rospy.Time(0), rospy.Duration(0.1)
+            )
+            tf_marker_to_map_msg = self.tf_buffer.lookup_transform(
+                f"marker_{marker_id}", "map", rospy.Time(0), rospy.Duration(0.1)
+            )
         except TransformException as e:
             rospy.logwarn(f"[Aruco] Transform lookup failed: {e}")
             return
@@ -207,7 +222,7 @@ class Aruco:
 
         # --- Filtering and Publishing ---
         rov_position = t_map_base[:3, 3]
-        rov_orientation_euler = R.from_matrix(t_map_base[:3, :3]).as_euler('xyz')
+        rov_orientation_euler = R.from_matrix(t_map_base[:3, :3]).as_euler("xyz")
 
         # IMPORTANT: Concatenate into a flat 1D array for the filter
         rov_pose_arr = np.concatenate((rov_position, rov_orientation_euler))
@@ -229,7 +244,7 @@ class Aruco:
         rov_pose_msg.pose.position.y = filtered_pose_arr[1]
         rov_pose_msg.pose.position.z = filtered_pose_arr[2]
 
-        filtered_quat = R.from_euler('xyz', filtered_pose_arr[3:]).as_quat()
+        filtered_quat = R.from_euler("xyz", filtered_pose_arr[3:]).as_quat()
         rov_pose_msg.pose.orientation.x = filtered_quat[0]
         rov_pose_msg.pose.orientation.y = filtered_quat[1]
         rov_pose_msg.pose.orientation.z = filtered_quat[2]
@@ -266,6 +281,7 @@ class Aruco:
             self.image_pub.publish(self.bridge.cv2_to_imgmsg(frame, "bgr8"))
         except CvBridgeError as e:
             rospy.logerr(f"Failed to publish annotated image: {e}")
+
 
 if __name__ == "__main__":
     rospy.init_node("marker_detection_node")

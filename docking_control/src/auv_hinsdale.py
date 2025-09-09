@@ -170,17 +170,19 @@ class AUV(object):
                 0.0, 0.0, 0.0, cos(x[4]) * sin(x[3]), sin(x[4]), 0.0
             )
         else:
-            fg = SX.zeros((3,1))
+            fg = SX.zeros((3, 1))
             fg[2, 0] = self.W
 
-            fb = SX.zeros((3,1))
+            fb = SX.zeros((3, 1))
             fb[2, 0] = -self.B
 
             rot_t = self.compute_transformation_matrix(x)[0:3, 0:3].T
 
             restorive_force = SX.zeros((6, 1))
             restorive_force[0:3, 0] = rot_t @ (fg + fb)
-            restorive_force[3:6, 0] = cross(self.cog, (rot_t @ fg)) + cross(self.cob, (rot_t @ fb))
+            restorive_force[3:6, 0] = cross(self.cog, (rot_t @ fg)) + cross(
+                self.cob, (rot_t @ fb)
+            )
             restorive_force *= -1
         return restorive_force
 
@@ -191,7 +193,7 @@ class AUV(object):
         f_B=SX.zeros((3, 1)),
         f_B_dot=SX.zeros((3, 1)),
         complete_model=False,
-        env_forces=SX.zeros((6,1)),
+        env_forces=SX.zeros((6, 1)),
     ):
         eta = x[0:6, :]
         nu_r = x[6:12, :]

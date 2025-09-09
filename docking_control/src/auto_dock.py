@@ -2,7 +2,6 @@ import os
 import time
 import numpy as np
 import sys
-from casadi import evalf
 
 sys.path.insert(0, "/home/ros/ws_dock/src/underwater_docking/docking_control/src")
 

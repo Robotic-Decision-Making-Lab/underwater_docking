@@ -32,7 +32,6 @@ class MPC:
         self.umin = np.array(mpc_params["bounds"]["umin"], dtype=np.float)
         self.umax = np.array(mpc_params["bounds"]["umax"], dtype=np.float)
 
-        # self.previous_control = np.random.uniform(-0.1, 0.1, size=(self.control_axes,1))
         self.previous_control = np.zeros((self.control_axes, 1))
 
         self.acados_ocp = AcadosOcp()
@@ -156,7 +155,7 @@ class MPC:
         x0 = x[0:12, :]
         N = self.horizon
 
-        nx = self.acados_ocp.model.x.shape[0]
+        self.acados_ocp.model.x.shape[0]
         nu = self.acados_ocp.model.u.shape[0]
 
         self.acados_ocp_solver.set(0, "lbx", x0)

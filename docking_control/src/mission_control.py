@@ -15,7 +15,6 @@ from tf2_ros.transform_listener import TransformListener
 from mavros_msgs.srv import CommandBool
 from std_srvs.srv import SetBool
 from scipy.spatial.transform import Rotation as R
-from copy import deepcopy
 import sys
 
 sys.path.insert(0, "/home/ros/ws_dock/src/underwater_docking/docking_control/src")
@@ -194,47 +193,47 @@ class BlueROV2:
         try:
             # 1. --- Extract Data from Input Message ---
             # Pose is in the ENU world frame
-            pos_enu = np.array([
-                odom.pose.pose.position.x,
-                odom.pose.pose.position.y,
-                odom.pose.pose.position.z
-            ])
+            pos_enu = np.array(
+                [
+                    odom.pose.pose.position.x,
+                    odom.pose.pose.position.y,
+                    odom.pose.pose.position.z,
+                ]
+            )
             # Orientation of body (FLU) relative to ENU world frame
-            quat_enu_to_body = np.array([
-                odom.pose.pose.orientation.x,
-                odom.pose.pose.orientation.y,
-                odom.pose.pose.orientation.z,
-                odom.pose.pose.orientation.w
-            ])
+            quat_enu_to_body = np.array(
+                [
+                    odom.pose.pose.orientation.x,
+                    odom.pose.pose.orientation.y,
+                    odom.pose.pose.orientation.z,
+                    odom.pose.pose.orientation.w,
+                ]
+            )
 
             # Velocities are in the body-fixed FLU frame
-            linear_vel_flu = np.array([
-                odom.twist.twist.linear.x,
-                odom.twist.twist.linear.y,
-                odom.twist.twist.linear.z
-            ])
-            angular_vel_flu = np.array([
-                odom.twist.twist.angular.x,
-                odom.twist.twist.angular.y,
-                odom.twist.twist.angular.z
-            ])
+            linear_vel_flu = np.array(
+                [
+                    odom.twist.twist.linear.x,
+                    odom.twist.twist.linear.y,
+                    odom.twist.twist.linear.z,
+                ]
+            )
+            angular_vel_flu = np.array(
+                [
+                    odom.twist.twist.angular.x,
+                    odom.twist.twist.angular.y,
+                    odom.twist.twist.angular.z,
+                ]
+            )
 
             # 2. --- Define Required Transformation Rotations ---
             # Rotation from world-fixed ENU to world-fixed NED frame
             # x_ned = y_enu,  y_ned = x_enu,  z_ned = -z_enu
-            rot_enu_to_ned = R.from_matrix([
-                [0, 1, 0],
-                [1, 0, 0],
-                [0, 0, -1]
-            ])
+            rot_enu_to_ned = R.from_matrix([[0, 1, 0], [1, 0, 0], [0, 0, -1]])
 
             # Rotation from body-fixed FLU to body-fixed FRD frame
             # x_frd = x_flu,  y_frd = -y_flu, z_frd = -z_flu
-            rot_flu_to_frd = R.from_matrix([
-                [1,  0,  0],
-                [0, -1,  0],
-                [0,  0, -1]
-            ])
+            rot_flu_to_frd = R.from_matrix([[1, 0, 0], [0, -1, 0], [0, 0, -1]])
 
             # 3. --- Perform Transformations ---
             # A) Transform Pose from ENU to NED
@@ -250,7 +249,9 @@ class BlueROV2:
             rot_ned_to_body = rot_enu_to_body * rot_enu_to_ned.inv()
 
             quat_ned = rot_ned_to_body.as_quat()
-            euler_ned = rot_ned_to_body.as_euler("xyz", degrees=False) # roll, pitch, yaw
+            euler_ned = rot_ned_to_body.as_euler(
+                "xyz", degrees=False
+            )  # roll, pitch, yaw
 
             # C) Transform Velocities from FLU body frame to FRD body frame
             linear_vel_frd = rot_flu_to_frd.apply(linear_vel_flu)
@@ -268,8 +269,10 @@ class BlueROV2:
             # that expect a standard NED/FRD convention.
             odom_ned = Odometry()
             odom_ned.header.stamp = odom.header.stamp
-            odom_ned.header.frame_id = "map_ned"       # World frame is now NED
-            odom_ned.child_frame_id = odom.child_frame_id # Body frame name is unchanged
+            odom_ned.header.frame_id = "map_ned"  # World frame is now NED
+            odom_ned.child_frame_id = (
+                odom.child_frame_id
+            )  # Body frame name is unchanged
 
             # Populate pose with NED data
             odom_ned.pose.pose.position.x = pos_ned[0]
@@ -530,7 +533,7 @@ class BlueROV2:
         else:
             x0 = self.rov_odom
 
-        xr = np.array([[-1.5, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]]).T
+        xr = np.array([[-1.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
 
         try:
             forces, wrench, converge_flag = self.mpc.run_mpc(x0, xr)
