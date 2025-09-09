@@ -21,7 +21,7 @@ RUN sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.ke
 
 RUN sudo apt-get -q update \
     && sudo apt-get -q -y upgrade \
-    && rosdep update \
+    && rosdep update --include-eol-distros \
     && rosdep install -y --from-paths . --ignore-src -r --rosdistro ${ROS_DISTRO} \
     && sudo apt-get autoremove -y \
     && sudo apt-get clean -y \

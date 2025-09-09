@@ -1,5 +1,5 @@
 ARG ROS_DISTRO=noetic
-FROM ros:$ROS_DISTRO-ros-base as ci
+FROM ros:$ROS_DISTRO-ros-base AS ci
 
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /root/ws_dock
@@ -39,14 +39,14 @@ RUN apt-get -q update \
 # Install all ROS dependencies needed for CI
 RUN apt-get -q update \
     && apt-get -q -y upgrade \
-    && rosdep update \
+    && rosdep update --include-eol-distros \
     && rosdep install -y --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} --as-root=apt:false \
     && rm -rf src \
     && apt-get autoremove -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
-FROM ci as robot
+FROM ci AS robot
 
 # Configure a new non-root user
 ARG USERNAME=ros
@@ -116,7 +116,7 @@ RUN sudo apt-get -q update \
 WORKDIR $USER_WORKSPACE
 RUN sudo apt-get -q update \
     && sudo apt-get -q -y upgrade \
-    && rosdep update \
+    && rosdep update --include-eol-distros \
     && rosdep install -y --from-paths src --ignore-src -r --rosdistro ${ROS_DISTRO} \
     && sudo apt-get autoremove -y \
     && sudo apt-get clean -y \
@@ -127,7 +127,7 @@ RUN . "/opt/ros/${ROS_DISTRO}/setup.sh" \
     && echo "source ${USER_WORKSPACE}/devel/setup.bash" >> /home/$USERNAME/.bashrc \
     && echo "if [ -f /opt/ros/${ROS_DISTRO}/setup.bash ]; then source /opt/ros/${ROS_DISTRO}/setup.bash; fi" >> /home/$USERNAME/.bashrc
 
-FROM robot as desktop
+FROM robot AS desktop
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV USER_WORKSPACE=/home/$USERNAME/ws_dock
@@ -144,7 +144,7 @@ RUN sudo apt-get update \
     && sudo apt-get clean -y \
     && sudo rm -rf /var/lib/apt/lists/*
 
-FROM desktop as desktop-nvidia
+FROM desktop AS desktop-nvidia
 
 # Install NVIDIA software
 RUN sudo apt-get update \
