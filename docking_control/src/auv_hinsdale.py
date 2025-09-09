@@ -32,7 +32,6 @@ class AUV(object):
         self.cob = vehicle_dynamics["cob"]
         self.cog_to_cob = self.cog - self.cob
         self.neutral_bouy = vehicle_dynamics["neutral_bouy"]
-        self.linear_model = {"A": SX.zeros((12, 12)), "B": SX.zeros((12, 8))}
         self.curr_timestep = 0.0
         self.ocean_current_data = []
 
