@@ -81,7 +81,7 @@ RUN git clone https://github.com/acados/acados.git \
     && git submodule update --recursive --init \
     && mkdir -p build \
     && cd build \
-    && cmake -DACADOS_WITH_QPOASES=ON -DACADOS_WITH_OSQP=ON -DACADOS_WITH_HPMPC=ON ..\
+    && cmake -DACADOS_WITH_QPOASES=ON -DACADOS_WITH_OSQP=ON ..\
     && make install -j4
 
 # Install acados python interface
