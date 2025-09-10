@@ -84,6 +84,10 @@ RUN git clone https://github.com/acados/acados.git \
     && cmake -DACADOS_WITH_QPOASES=ON -DACADOS_WITH_OSQP=ON ..\
     && make install -j4
 
+WORKDIR /home/$USERNAME
+RUN cd acados \
+    && git checkout v0.5.0
+
 # Install acados python interface
 WORKDIR /home/$USERNAME
 RUN pip install -e /home/$USERNAME/acados/interfaces/acados_template \
