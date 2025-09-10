@@ -14,8 +14,8 @@ COPY --chown=$USER_UID:$USER_GID . src/$PROJECT_NAME
 
 RUN ls src/$PROJECT_NAME
 
-RUN sudo rm /etc/apt/sources.list.d/ros1-latest.list \
-  && sudo rm /usr/share/keyrings/ros1-latest-archive-keyring.gpg
+RUN sudo rm -f /etc/apt/sources.list.d/ros1-latest.list \
+  && sudo rm -f /usr/share/keyrings/ros1-latest-archive-keyring.gpg
 
 RUN sudo apt-get update \
   && sudo apt-get install -y ca-certificates curl

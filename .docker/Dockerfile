@@ -15,6 +15,7 @@ RUN apt-get -q update \
     && apt-get -q install --no-install-recommends -y \
     git \
     sudo \
+    cmake \
     clang \
     clang-format-12 \
     clang-tidy \
@@ -50,6 +51,7 @@ FROM ci AS robot
 
 # Configure a new non-root user
 ARG USERNAME=ros
+ARG USER_HOME=/home/$USERNAME
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
@@ -79,15 +81,16 @@ RUN git clone https://github.com/acados/acados.git \
     && git submodule update --recursive --init \
     && mkdir -p build \
     && cd build \
-    && cmake -DACADOS_WITH_QPOASES=ON -DACADOS_WITH_OSQP=ON ..\
+    && cmake -DACADOS_WITH_QPOASES=ON -DACADOS_WITH_OSQP=ON -DACADOS_WITH_HPMPC=ON ..\
     && make install -j4
 
 # Install acados python interface
 WORKDIR /home/$USERNAME
-RUN pip install -e /home/$USERNAME/acados/interfaces/acados_template \
-    && echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/home/$USERNAME/acados/lib"" >> /home/$USERNAME/.bashrc \
-    && echo "ACADOS_SOURCE_DIR="/home/$USERNAME/acados"" >> /home/$USERNAME/.bashrc
+RUN pip install -e /home/$USERNAME/acados/interfaces/acados_template
 
+# Use ENV to set variables globally for the container's environment
+ENV ACADOS_SOURCE_DIR=$USER_HOME/acados
+ENV LD_LIBRARY_PATH=$USER_HOME/acados/lib:$LD_LIBRARY_PATH
 
 ENV USER_WORKSPACE=/home/$USERNAME/ws_dock
 WORKDIR $USER_WORKSPACE
@@ -111,6 +114,8 @@ RUN sudo apt-get -q update \
     && sudo apt-get autoremove -y \
     && sudo apt-get clean -y \
     && sudo rm -rf /var/lib/apt/lists/*
+
+RUN pip install --upgrade opencv-python opencv-contrib-python
 
 # Install all ROS dependencies
 WORKDIR $USER_WORKSPACE
