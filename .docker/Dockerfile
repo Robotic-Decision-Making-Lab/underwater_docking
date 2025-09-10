@@ -86,11 +86,9 @@ RUN git clone https://github.com/acados/acados.git \
 
 # Install acados python interface
 WORKDIR /home/$USERNAME
-RUN pip install -e /home/$USERNAME/acados/interfaces/acados_template
-
-# Use ENV to set variables globally for the container's environment
-ENV ACADOS_SOURCE_DIR=$USER_HOME/acados
-ENV LD_LIBRARY_PATH=$USER_HOME/acados/lib:$LD_LIBRARY_PATH
+RUN pip install -e /home/$USERNAME/acados/interfaces/acados_template \
+    && echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/home/$USERNAME/acados/lib"" >> /home/$USERNAME/.bashrc \
+    && echo "export ACADOS_SOURCE_DIR="/home/$USERNAME/acados"" >> /home/$USERNAME/.bashrc
 
 ENV USER_WORKSPACE=/home/$USERNAME/ws_dock
 WORKDIR $USER_WORKSPACE
