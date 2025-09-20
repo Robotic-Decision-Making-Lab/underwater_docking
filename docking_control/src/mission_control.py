@@ -15,10 +15,12 @@ from tf2_ros.transform_listener import TransformListener
 from mavros_msgs.srv import CommandBool
 from std_srvs.srv import SetBool
 from scipy.spatial.transform import Rotation as R
+from casadi import evalf
 import sys
 
 sys.path.insert(0, "/home/ros/ws_dock/src/underwater_docking/docking_control/src")
 from auto_dock import MPControl  # noqa: E402
+from odl_controller import ODL  # noqa: E402
 
 
 class BlueROV2:
@@ -66,9 +68,16 @@ class BlueROV2:
         self.camera_tilt = 1500
         self.rc_passthrough_flag = False
 
+        self.gp_residual_pred = np.zeros((12, 1))
+        self.wrench = np.zeros((6, 1))
+        self.x_next_nominal = np.zeros((12, 1))
+        self.timestamp = 0.0
+        self.prev_odom = np.zeros((12, 1))
+
         self.load_pwm_lookup()
 
-        self.mpc = MPControl()
+        # self.mpc = MPControl()
+        self.mpc = ODL()
 
         # Set up dictionary to store subscriber data
         self.sub_data_dict = {}
@@ -311,9 +320,13 @@ class BlueROV2:
             z = pose.pose.orientation.z
             w = pose.pose.orientation.w
             euler = R.from_quat([x, y, z, w]).as_euler("xyz")
-            roll = euler[0]
-            pitch = euler[1]
-            yaw = euler[2]
+            # roll = euler[0]
+            # pitch = euler[1]
+            # yaw = euler[2]
+            roll = 0.0
+            pitch = 0.0
+            yaw = 0.0
+            # yaw = np.arctan(y/-x)
             self.rov_pose = np.zeros((6, 1))
             self.rov_pose[0][0] = -pose.pose.position.x
             self.rov_pose[1][0] = pose.pose.position.y
@@ -533,10 +546,19 @@ class BlueROV2:
         else:
             x0 = self.rov_odom
 
-        xr = np.array([[-1.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
+        xr = np.array([[-1.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
 
         try:
-            forces, wrench, converge_flag = self.mpc.run_mpc(x0, xr)
+            if self.mpc.gp_enabled and self.mpc.sogp_models:
+                self.gp_residual_pred = self.mpc._update_and_predict_sogp(
+                    self.prev_odom,
+                    self.wrench,
+                    x0,
+                    self.x_next_nominal,
+                    self.timestamp,
+                )
+
+            forces, self.wrench, converge_flag = self.mpc.run_mpc(x0, xr, self.gp_residual_pred)
             if converge_flag:
                 msg = """
                 [BlueROV2][auto_control] ROV reached dock successfully!
@@ -552,15 +574,23 @@ class BlueROV2:
                     self.disarm()
                 self.mode_flag = "manual"
             else:
+                if self.mpc.gp_enabled and self.mpc.sogp_models:
+                    self.prev_odom = x0
+                    x_dot_nom_c = self.mpc.auv.compute_nonlinear_dynamics(
+                        x0, self.wrench, complete_model=True
+                    )
+                    x_dot_nominal = evalf(x_dot_nom_c).full()
+                    self.x_next_nominal = x0 + x_dot_nominal * self.mpc.dt
+
                 wrench_frd = WrenchStamped()
                 wrench_frd.header.frame_id = "base_link_frd"
                 wrench_frd.header.stamp = rospy.Time()
-                wrench_frd.wrench.force.x = wrench[0]
-                wrench_frd.wrench.force.y = wrench[1]
-                wrench_frd.wrench.force.z = wrench[2]
-                wrench_frd.wrench.torque.x = wrench[3]
-                wrench_frd.wrench.torque.y = wrench[4]
-                wrench_frd.wrench.torque.z = wrench[5]
+                wrench_frd.wrench.force.x = self.wrench[0]
+                wrench_frd.wrench.force.y = self.wrench[1]
+                wrench_frd.wrench.force.z = self.wrench[2]
+                wrench_frd.wrench.torque.x = self.wrench[3]
+                wrench_frd.wrench.torque.y = self.wrench[4]
+                wrench_frd.wrench.torque.z = self.wrench[5]
                 self.mpc_wrench_pub.publish(wrench_frd)
 
                 mpc_op = Float32MultiArray()
@@ -590,6 +620,7 @@ class BlueROV2:
 
                 self.mpc_pwm_pub.publish(override_pwm)
                 self.control_pub.publish(override_pwm)
+                self.timestamp += self.mpc.dt
         except Exception as e:
             rospy.logerr_throttle(
                 10, "[BlueROV2][auto_control] Error in MPC Computation" + str(e)

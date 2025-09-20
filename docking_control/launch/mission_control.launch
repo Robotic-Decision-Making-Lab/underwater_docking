@@ -48,8 +48,9 @@
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="dock_to_map" args="0 0 0 0 0 0 dock map" />
 
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker2_to_dock_tf_broadcaster" args="0 0 0 0 0 0 marker_2 dock" /> -->
-  <node pkg="tf2_ros" type="static_transform_publisher" name="marker14_to_dock_tf_broadcaster" args="0 0 0 0 0 0 marker_14 dock" />
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker1_to_dock_tf_broadcaster" args="0 0 0 0 0 0 marker_1 dock" /> -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="marker2_to_dock_tf_broadcaster" args="0 0 0 0 0 0 marker_2 dock" />
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker14_to_dock_tf_broadcaster" args="0 0 0 0 0 0 marker_14 dock" /> -->
 
 
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker3_to_map_tf_broadcaster" args="0.0 -0.17 0.434 0 1.571 -1.571 marker_3 map" /> -->
@@ -92,6 +93,8 @@
   <node pkg="docking_control" type="video.py" name="video_feed" output="$(arg log_output)" launch-prefix="taskset -c 2">
       <param name="video_udp_port" value="$(arg video_udp_port)"/>
   </node>
+
+  <!-- <node pkg="docking_control" type="webcam.py" name="webcam" output="$(arg log_output)" launch-prefix="taskset -c 6" /> -->
 
   <node pkg="docking_control" type="marker_detection.py" name="marker_detection" output="$(arg log_output)" launch-prefix="taskset -c 3" />
 

@@ -1,0 +1,155 @@
+# Simulation tolerance and initial/final states
+tolerance: 0.05
+yaw_tolerance: 0.05
+x0: [0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
+xr: [2., 3., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
+t_len: 60.
+num_trials: 1
+static_target: True
+station_keeping: False
+
+# State estimator configuration
+state_estimator: ekf
+
+pf:
+  particles: 250
+  cov: 1e-4
+
+ekf:
+  cov: 1e-4
+
+# Target motion (WEC) parameters
+wec:
+  A: 0.5
+  omega: 0.1
+
+# Algorithm and GP configuration
+algorithm: odl
+
+gp:
+  enabled: True
+  kernel_type: COMBINATION # Options: RBF_ISO, PERIODIC, COMBINATION, MATERN32_ISO, MATERN52_ISO
+  hyperparameters:
+    length_scale: 0.75
+    variance: 0.75
+    noise_variance: 0.05
+    period: 10.0
+    periodic_length_scale: 100.0
+    periodic_variance: 4.0
+    periodic_noise_variance: 0.01
+  threshold: 0.05
+  max_bvs: 300
+  # Hyperparameter tuning with GPy
+  init_tuning_flag: False
+  training_samples: 250
+  tuning_max_iters: 1000
+  # Hyperparameter tuning inside SOGP
+  online_tuning_flag: False
+  rho_threshold: 0.6
+  min_bv_for_rho_tune: 100
+  hpo_buffer_size: 100
+
+# ===================================================================
+# Environmental Scenarios
+# To run a scenario, uncomment its block and comment out the others.
+# ===================================================================
+environments:
+  # --- Scenario 1: Calm Water Baseline ---
+  # calm_water:
+  #   current: {model: none}
+  #   waves: {model: none}
+  #   wind: {model: none}
+
+  # --- Scenario 2: Regular Waves Test ---
+  regular_waves_test:
+    current: {model: none}
+    waves:
+      model: regular
+      amplitude: 2.0
+      period: 10.0
+      direction: 45.0
+      phase: 90.0
+    wind: {model: none}
+
+  # --- Scenario 3: JONSWAP Storm Condition ---
+  # jonswap_storm:
+  #   current: {model: none}
+  #   waves:
+  #     model: jonswap
+  #     significant_wave_height: 7.0
+  #     peak_period: 6.0
+  #     direction: 30.0
+  #   wind:
+  #     model: constant
+  #     speed: 18.0
+  #     direction: 30.0
+
+  # --- Scenario 4: Cross-Current Shear Layer ---
+  # shear_layer_crossing:
+  #   current:
+  #     model: shear_layer
+  #     base_velocity: [0.0, 0.0, 0.0]
+  #     shear_velocity: [0.0, 1.5, 0.0]
+  #     boundary_axis: 'y'
+  #     boundary_position: 0.0
+  #     shear_width: 2.0
+  #   waves: {model: none}
+  #   wind: {model: none}
+
+  # --- Scenario 5: Canal / Wall Effect Maneuver ---
+  # canal_effect_maneuver:
+  #   current: {model: none}
+  #   waves: {model: none}
+  #   wind: {model: none}
+  #   disturbances:
+  #     model: canal_effect
+  #     wall_axis: 'y'
+  #     wall_position: 5.0
+  #     wall_extents: [-50, 50]
+  #     strength: 200.0
+  #     falloff_power: 2.0
+
+  # --- Scenario 6: Pierson-Moskowitz (PM) Sea State ---
+  # A fully-developed sea state, less peaky than JONSWAP.
+  # pm_sea_state:
+  #   current: {model: none}
+  #   waves:
+  #     model: pm
+  #     significant_wave_height: 4.0
+  #     direction: 180.0
+  #   wind: {model: none}
+
+  # --- Scenario 7: Strong Wind Only ---
+  # Tests the controller's ability to reject a strong, steady disturbance.
+  # wind_only_test:
+  #   current: {model: none}
+  #   waves: {model: none}
+  #   wind:
+  #     model: constant
+  #     speed: 20.0         # Strong wind (approx 40 knots)
+  #     direction: 90.0       # Coming directly from the East
+
+  # --- Scenario 8: Regular Waves plus Current ---
+  # Tests controller performance with superimposed disturbances.
+  # waves_plus_current:
+  #   current:
+  #     model: constant
+  #     velocity: [0.5, -0.5, 0.0] # Current from North-West
+  #   waves:
+  #     model: regular
+  #     amplitude: 1.5
+  #     period: 7.0
+  #     direction: 135.0 # Waves from South-East
+  #     phase: 0.0
+  #   wind: {model: none}
+
+  # --- Scenario 9: Double-Gyre Current ---
+  # A highly complex, time- and space-varying current field. Very challenging.
+  # double_gyre_mission:
+  #   current:
+  #     model: double_gyre
+  #     A: 0.1
+  #     period_hours: 6.0
+  #     epsilon: 0.25
+  #   waves: {model: none}
+  #   wind: {model: none}
