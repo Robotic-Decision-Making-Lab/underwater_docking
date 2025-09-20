@@ -2,15 +2,14 @@ import os
 import time
 import numpy as np
 import sys
-from casadi import evalf
 import yaml
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional
 import logging
 
 sys.path.insert(0, "/home/ros/ws_dock/src/underwater_docking/docking_control/src")
 
 from auv_hinsdale import AUV  # noqa: E402
-from sogp import SOGP
+from sogp import SOGP  # noqa: E402
 from mpc_sogp_cbf import MPC  # noqa: E402
 
 
@@ -100,7 +99,8 @@ class ODL:
 
         if not isinstance(loaded_params, dict):
             logging.warning(
-                f"YAML 'hyperparameters' format is invalid (type: {type(loaded_params)}). "
+                "YAML 'hyperparameters' format is invalid "
+                f"(type: {type(loaded_params)}). "
                 "Using all default values."
             )
             loaded_params = {}
@@ -111,7 +111,8 @@ class ODL:
             )
         else:
             logging.info(
-                "Loading SOGP hyperparameters from YAML, using defaults for any missing keys."
+                "Loading SOGP hyperparameters from YAML, using "
+                "defaults for any missing keys."
             )
 
         length_scale = loaded_params.get(
@@ -221,7 +222,6 @@ class ODL:
             params = yaml.load(f.read(), Loader=yaml.SafeLoader)
         return params
 
-
     def wrap_pi2negpi(self, angle):
         """This function wraps the angle to the range -pi to pi.
 
@@ -259,14 +259,12 @@ class ODL:
         """
 
         if self.gp_enabled and np.any(np.abs(residual) > 1e2):
-            logging.warning(
-                f"Large GP residual {residual.T}, resetting to zero."
-            )
+            logging.warning(f"Large GP residual {residual.T}, resetting to zero.")
             residual = np.zeros_like(residual)
 
         current_gp_res_for_mpc = (
-                residual if self.gp_enabled else np.zeros_like(residual)
-            )
+            residual if self.gp_enabled else np.zeros_like(residual)
+        )
 
         process_t0 = time.perf_counter()
         self.distance = np.linalg.norm(x0[0:3, :] - xr[0:3, :])

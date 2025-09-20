@@ -1,7 +1,22 @@
 import numpy as np
 import yaml
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel
-from casadi import evalf, SX, mtimes, pinv, vertcat, hessian, Function, jacobian, dot, fmin, fmax, sumsqr, cos, sin, pi
+from casadi import (
+    evalf,
+    SX,
+    mtimes,
+    pinv,
+    vertcat,
+    Function,
+    jacobian,
+    dot,
+    fmin,
+    fmax,
+    sumsqr,
+    cos,
+    sin,
+    pi,
+)
 from scipy.linalg import block_diag
 import sys
 
@@ -178,13 +193,17 @@ class MPC:
 
             Args:
                 x (ca.MX): The AUV's current state vector (12x1).
-                xr (ca.MX): The AUV's reference state vector (12x1), including target position and orientation.
+                xr (ca.MX): The AUV's reference state vector (12x1), including
+                target position and orientation.
+
                 p_start (ca.MX): The start point of the frustum's axis (3x1).
                 start_radius (float): The radius of the corridor at the start point.
                 end_radius (float): The radius of the corridor at the end point.
-                orientation_weight (float): Tuning parameter to scale the orientation constraint's importance.
-                max_align_angle_rad (float): The maximum allowed angle (in radians) between the AUV's
-                                            forward vector and the target's forward vector.
+                orientation_weight (float): Tuning parameter to scale the orientation
+                constraint's importance.
+
+                max_align_angle_rad (float): The maximum allowed angle (in radians)
+                between the AUV's forward vector and the target's forward vector.
 
             Returns:
                 ca.MX: The value of the combined barrier function.
@@ -203,7 +222,7 @@ class MPC:
 
             # --- 2. Orientation Barrier (Aligns AUV frame with Target frame) ---
             # AUV's current orientation
-            phi_auv, theta_auv, psi_auv = x[3], x[4], x[5]
+            _, theta_auv, psi_auv = x[3], x[4], x[5]
 
             # AUV's forward vector (body x-axis) in the world frame
             v_auv_x = cos(psi_auv) * cos(theta_auv)
@@ -212,7 +231,7 @@ class MPC:
             v_auv = vertcat(v_auv_x, v_auv_y, v_auv_z)
 
             # Target's orientation from the reference state
-            phi_target, theta_target, psi_target = xr[3], xr[4], xr[5]
+            _, theta_target, psi_target = xr[3], xr[4], xr[5]
 
             # Target's forward vector (body x-axis) in the world frame
             v_target_orient_x = cos(psi_target) * cos(theta_target)
@@ -228,8 +247,9 @@ class MPC:
             # The cosine of the maximum allowed alignment angle
             cos_max_angle = cos(max_align_angle_rad)
 
-            # The orientation barrier is positive when the frames are aligned within the allowed cone
-            b_orientation = cos_angle_error - cos_max_angle
+            # The orientation barrier is positive when the frames are aligned within the
+            # allowed cone
+            cos_angle_error - cos_max_angle
 
             # --- 3. Combined Barrier ---
             b_combined = b_position  # + orientation_weight * b_orientation
@@ -259,7 +279,8 @@ class MPC:
 
             # Calculate the projection parameter 't'.
             # This determines the closest point on the infinite line.
-            # Add a small epsilon to prevent division by zero if start and end points are the same.
+            # Add a small epsilon to prevent division by zero if start and end
+            # points are the same.
             t = dot(w, v) / (dot(v, v) + 1e-9)
 
             # Clamp 't' to the range [0, 1] to stay on the line *segment*.
@@ -363,8 +384,8 @@ class MPC:
         self.acados_ocp.dims.N = self.horizon
         self.acados_ocp.parameter_values = np.zeros(2 * self.vehicle_state_dim)
 
-        xr = self.acados_model.p[0:self.vehicle_state_dim]
-        residual = self.acados_model.p[self.vehicle_state_dim:]
+        xr = self.acados_model.p[0 : self.vehicle_state_dim]
+        residual = self.acados_model.p[self.vehicle_state_dim :]
 
         self.acados_ocp.cost.cost_type = "NONLINEAR_LS"
         self.acados_ocp.cost.cost_type_e = "NONLINEAR_LS"
@@ -433,7 +454,7 @@ class MPC:
         x0 = x[0:12, :]
         N = self.horizon
 
-        nx = self.acados_ocp.model.x.shape[0]
+        self.acados_ocp.model.x.shape[0]
         nu = self.acados_ocp.model.u.shape[0]
 
         # set initial state constraint

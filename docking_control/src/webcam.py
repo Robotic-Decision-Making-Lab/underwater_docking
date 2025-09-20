@@ -8,6 +8,7 @@ import cv2
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
+
 def webcam_publisher():
     """
     Captures video from the default webcam and publishes it to a ROS topic.
@@ -15,13 +16,14 @@ def webcam_publisher():
     # Initialize the ROS node.
     # 'anonymous=True' ensures that your node has a unique name by adding a
     # random number to the end of it.
-    rospy.init_node('webcam_publisher', anonymous=True)
+    rospy.init_node("webcam_publisher", anonymous=True)
 
     # Create a publisher.
-    # This will publish messages of type sensor_msgs/Image on the topic '/BlueROV2/video'.
+    # This will publish messages of type sensor_msgs/Image on the topic
+    # '/BlueROV2/video'.
     # The queue_size argument is a buffer that limits the number of messages
     # to store if the subscriber is not receiving them fast enough.
-    image_pub = rospy.Publisher('/BlueROV2/video', Image, queue_size=10)
+    image_pub = rospy.Publisher("/BlueROV2/video", Image, queue_size=10)
 
     # Create a CvBridge object to convert between OpenCV and ROS image formats.
     bridge = CvBridge()
@@ -68,7 +70,7 @@ def webcam_publisher():
     rospy.loginfo("Webcam node shut down and camera released.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         webcam_publisher()
     except rospy.ROSInterruptException:

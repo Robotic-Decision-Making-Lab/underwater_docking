@@ -3,7 +3,7 @@ import numbers
 from typing import Union, Callable, Optional, Tuple, List, Any
 
 import numpy as np
-from numpy.linalg import slogdet, inv, norm, cholesky
+from numpy.linalg import slogdet, inv, cholesky
 from scipy.linalg import cho_solve
 
 
@@ -117,19 +117,23 @@ class SOGP:
 
         Args:
             input_dim: The dimensionality of the input space.
-            hyperparams: A tuple of hyperparameters. The structure depends on the kernel.
+            hyperparams: A tuple of hyperparameters. The structure depends on the kernel
                 - RBF_ARD: (log_length_scales, log_signal_variance, log_noise_variance)
-                           where log_length_scales is a 1D numpy array of size `input_dim`.
+                           where log_length_scales is numpy array of size `input_dim`.
                 - RBF_ISO: (log_length_scale, log_signal_variance, log_noise_variance)
-                - PERIODIC: (log_length_scale, log_signal_variance, log_noise_variance, period)
+                - PERIODIC: (log_length_scale, log_signal_variance,
+                            log_noise_variance, period)
                 - COMBINATION: (rbf_log_l, rbf_log_sig_var, rbf_log_noise,
-                                periodic_log_l, periodic_log_sig_var, periodic_log_noise, period)
-            kernel: The kernel type. One of "RBF_ARD", "RBF_ISO", "PERIODIC", "COMBINATION".
+                                periodic_log_l, periodic_log_sig_var,
+                                periodic_log_noise, period)
+            kernel: The kernel type. One of "RBF_ARD", "RBF_ISO",
+                    "PERIODIC", "COMBINATION".
             max_bvs: The maximum number of basis vectors to store.
             prior_mean_func: A function to compute the prior mean.
             prior_mean_params: Additional parameters for the prior mean function.
             threshold: The novelty threshold (gamma) for adding a new basis vector.
-            hpo_buffer_size: The number of recent points to store for hyperparameter optimization.
+            hpo_buffer_size: The number of recent points to store for hyperparameter
+                            optimization.
         """
         self.input_dim: int = input_dim
         self.max_bvs: int = max_bvs
@@ -186,7 +190,8 @@ class SOGP:
             and log_length_scales.shape[0] == self.input_dim
         ):
             raise ValueError(
-                f"log_length_scales for RBF_ARD must be a 1D numpy array of length {self.input_dim}."
+                "log_length_scales for RBF_ARD must be a "
+                f"1D numpy array of length {self.input_dim}."
             )
         if not isinstance(log_signal_variance, numbers.Number):
             raise ValueError("log_signal_variance must be a scalar for RBF_ARD.")
@@ -272,7 +277,8 @@ class SOGP:
         n2, dim2 = x2.shape
         if dim1 != input_dim or dim2 != input_dim:
             raise ValueError(
-                f"Input dimensions mismatch. Expected {input_dim}, got {dim1} and {dim2}."
+                "Input dimensions mismatch."
+                f" Expected {input_dim}, got {dim1} and {dim2}."
             )
 
         signal_variance = np.exp(log_signal_variance)
@@ -314,7 +320,8 @@ class SOGP:
         n2, dim2 = x2.shape
         if dim1 != input_dim or dim2 != input_dim:
             raise ValueError(
-                f"Input dimensions mismatch. Expected {input_dim}, got {dim1} and {dim2}."
+                "Input dimensions mismatch."
+                f" Expected {input_dim}, got {dim1} and {dim2}."
             )
 
         signal_variance = np.exp(log_signal_variance)
@@ -358,7 +365,8 @@ class SOGP:
         n2, dim2 = x2.shape
         if dim1 != input_dim or dim2 != input_dim:
             raise ValueError(
-                f"Input dimensions mismatch. Expected {input_dim}, got {dim1} and {dim2}."
+                "Input dimensions mismatch."
+                f" Expected {input_dim}, got {dim1} and {dim2}."
             )
 
         signal_variance = np.exp(log_signal_variance)
@@ -394,7 +402,8 @@ class SOGP:
         self_covariance: bool = False,
     ) -> np.ndarray:
         """
-        Computes covariance using a combination of an RBF (ISO) kernel and a Periodic kernel.
+        Computes covariance using a combination of an RBF (ISO) kernel
+        and a Periodic kernel.
         The RBF kernel acts on the first D-1 dimensions.
         The Periodic kernel acts on the last (D-th) dimension.
         """
@@ -511,7 +520,8 @@ class SOGP:
         )
         if x_new_array.shape[1] != self.input_dim:
             raise ValueError(
-                f"Input x_new dimension mismatch: {x_new_array.shape[1]}, expected {self.input_dim}"
+                f"Input x_new dimension mismatch: {x_new_array.shape[1]}, "
+                f"expected {self.input_dim}"
             )
 
         # If no basis vectors exist, return the prior
@@ -559,7 +569,8 @@ class SOGP:
         x_new_array = np.asarray(x_new, dtype=float).reshape(1, -1)
         if x_new_array.shape[1] != self.input_dim:
             raise ValueError(
-                f"x_new has incorrect dimension {x_new_array.shape[1]}, expected {self.input_dim}"
+                f"x_new has incorrect dimension {x_new_array.shape[1]},"
+                f" expected {self.input_dim}"
             )
 
         if self.hpo_buffer_size > 0:
@@ -760,9 +771,11 @@ class SOGP:
         if not (0 <= remove_index < self.num_bvs):
             raise ValueError("Invalid BV removal index.")
 
-        updated_alpha, updated_C, updated_Kb_inv = (
-            self._get_updated_params_after_removal(remove_index)
-        )
+        (
+            updated_alpha,
+            updated_C,
+            updated_Kb_inv,
+        ) = self._get_updated_params_after_removal(remove_index)
         self.alpha = updated_alpha
         self.C = updated_C
         self.Kb_inv = updated_Kb_inv
@@ -779,7 +792,8 @@ class SOGP:
         Fits the model by sequentially updating it with all provided data points.
 
         Args:
-            X: Input data, either a pandas DataFrame or a numpy array (n_samples, n_features).
+            X: Input data, either a pandas DataFrame or a numpy array
+                (n_samples, n_features).
             Y: Target data, either a pandas Series, numpy array, or list (n_samples,).
         """
         is_pandas_df = hasattr(X, "iloc")
@@ -817,7 +831,10 @@ class SOGP:
             # [l_1, ..., l_D, sigma_f, sigma_n]
             log_length_scales_flat = self.log_length_scale.flatten()
             return np.concatenate(
-                [log_length_scales_flat, [self.log_signal_variance, self.log_noise_variance]]
+                [
+                    log_length_scales_flat,
+                    [self.log_signal_variance, self.log_noise_variance],
+                ]
             )
         elif self.kernel_name == "RBF_ISO":
             # [l, sigma_f, sigma_n]
@@ -840,15 +857,17 @@ class SOGP:
             )
         elif self.kernel_name == "COMBINATION":
             # [rbf_l, rbf_sf, rbf_sn, per_l, per_sf, per_sn, period]
-            return np.array([
-                self.log_length_scale,
-                self.log_signal_variance,
-                self.log_noise_variance,
-                self.log_periodic_length_scale,
-                self.log_periodic_signal_variance,
-                self.log_periodic_noise_variance,
-                self.period
-            ])
+            return np.array(
+                [
+                    self.log_length_scale,
+                    self.log_signal_variance,
+                    self.log_noise_variance,
+                    self.log_periodic_length_scale,
+                    self.log_periodic_signal_variance,
+                    self.log_periodic_noise_variance,
+                    self.period,
+                ]
+            )
         else:
             raise ValueError(f"Unknown kernel_name: {self.kernel_name}")
 
@@ -860,9 +879,12 @@ class SOGP:
         if self.kernel_name == "RBF_ARD":
             if len(hyperparameters_flat) != self.input_dim + 2:
                 raise ValueError(
-                    f"RBF_ARD: Expected {self.input_dim + 2} hyperparameters, got {len(hyperparameters_flat)}"
+                    f"RBF_ARD: Expected {self.input_dim + 2} hyperparameters, "
+                    f"got {len(hyperparameters_flat)}"
                 )
-            self.log_length_scale = hyperparameters_flat[: self.input_dim].reshape(1, -1)
+            self.log_length_scale = hyperparameters_flat[: self.input_dim].reshape(
+                1, -1
+            )
             self.log_signal_variance = hyperparameters_flat[self.input_dim]
             self.log_noise_variance = hyperparameters_flat[self.input_dim + 1]
             self.noise_variance = np.exp(self.log_noise_variance)
@@ -870,7 +892,8 @@ class SOGP:
         elif self.kernel_name == "RBF_ISO":
             if len(hyperparameters_flat) != 3:
                 raise ValueError(
-                    f"RBF_ISO: Expected 3 hyperparameters, got {len(hyperparameters_flat)}"
+                    f"RBF_ISO: Expected 3 hyperparameters, "
+                    f"got {len(hyperparameters_flat)}"
                 )
             self.log_length_scale = hyperparameters_flat[0]
             self.log_signal_variance = hyperparameters_flat[1]
@@ -880,7 +903,8 @@ class SOGP:
         elif self.kernel_name == "PERIODIC":
             if len(hyperparameters_flat) != 4:
                 raise ValueError(
-                    f"PERIODIC: Expected 4 hyperparameters, got {len(hyperparameters_flat)}"
+                    f"PERIODIC: Expected 4 hyperparameters, "
+                    f"got {len(hyperparameters_flat)}"
                 )
             self.log_length_scale = hyperparameters_flat[0]
             self.log_signal_variance = hyperparameters_flat[1]
@@ -891,7 +915,8 @@ class SOGP:
         elif self.kernel_name == "COMBINATION":
             if len(hyperparameters_flat) != 7:
                 raise ValueError(
-                    f"COMBINATION: Expected 7 hyperparameters, got {len(hyperparameters_flat)}"
+                    f"COMBINATION: Expected 7 hyperparameters, "
+                    f"got {len(hyperparameters_flat)}"
                 )
             self.log_length_scale = hyperparameters_flat[0]
             self.log_signal_variance = hyperparameters_flat[1]
@@ -901,8 +926,11 @@ class SOGP:
             self.log_periodic_noise_variance = hyperparameters_flat[5]
             self.period = hyperparameters_flat[6]
             # For the online update, the model uses a single noise term.
-            # We set it to the RBF noise to maintain consistency with the original code's structure.
-            # Note: The HPO gradient calculation correctly uses the sum of both noise terms.
+            # We set it to the RBF noise to maintain consistency with the
+            # original code's structure.
+            #
+            # Note: The HPO gradient calculation correctly uses the sum of both
+            # noise terms.
             self.noise_variance = np.exp(self.log_noise_variance)
 
         else:
@@ -917,7 +945,9 @@ class SOGP:
         kernel_name: str,
     ) -> Tuple[float, np.ndarray]:
         """
-        Calculates the negative log marginal likelihood (objective function) and its gradient.
+        Calculates the negative log marginal likelihood (objective function)
+        and its gradient.
+
         This static method is the core of the hyperparameter optimization.
         """
         num_samples = X_hpo.shape[0]
@@ -929,26 +959,64 @@ class SOGP:
             log_signal_variance = hyperparameters_flat[input_dim]
             log_noise_variance = hyperparameters_flat[input_dim + 1]
             K_f = SOGP._compute_rbf_ard_kernel(
-                X_hpo, X_hpo, input_dim, log_length_scales, log_signal_variance, log_noise_variance, self_covariance=False
+                X_hpo,
+                X_hpo,
+                input_dim,
+                log_length_scales,
+                log_signal_variance,
+                log_noise_variance,
+                self_covariance=False,
             )
             total_noise_variance = np.exp(log_noise_variance)
         elif kernel_name == "RBF_ISO":
-            log_length_scale, log_signal_variance, log_noise_variance = hyperparameters_flat
+            (
+                log_length_scale,
+                log_signal_variance,
+                log_noise_variance,
+            ) = hyperparameters_flat
             K_f = SOGP._compute_rbf_iso_kernel(
-                X_hpo, X_hpo, input_dim, log_length_scale, log_signal_variance, log_noise_variance, self_covariance=False
+                X_hpo,
+                X_hpo,
+                input_dim,
+                log_length_scale,
+                log_signal_variance,
+                log_noise_variance,
+                self_covariance=False,
             )
             total_noise_variance = np.exp(log_noise_variance)
         elif kernel_name == "PERIODIC":
-            log_length_scale, log_signal_variance, log_noise_variance, period = hyperparameters_flat
+            (
+                log_length_scale,
+                log_signal_variance,
+                log_noise_variance,
+                period,
+            ) = hyperparameters_flat
             K_f = SOGP._compute_periodic_kernel(
-                X_hpo, X_hpo, input_dim, log_length_scale, log_signal_variance, log_noise_variance, period, self_covariance=False
+                X_hpo,
+                X_hpo,
+                input_dim,
+                log_length_scale,
+                log_signal_variance,
+                log_noise_variance,
+                period,
+                self_covariance=False,
             )
             total_noise_variance = np.exp(log_noise_variance)
         ## NEW ##
         elif kernel_name == "COMBINATION":
             rbf_l, rbf_sf, rbf_sn, per_l, per_sf, per_sn, period = hyperparameters_flat
             K_f = SOGP._compute_combination_kernel(
-                X_hpo, X_hpo, input_dim, rbf_l, rbf_sf, rbf_sn, per_l, per_sf, per_sn, period, self_covariance=False
+                X_hpo,
+                X_hpo,
+                input_dim,
+                rbf_l,
+                rbf_sf,
+                rbf_sn,
+                per_l,
+                per_sf,
+                per_sn,
+                period,
+                self_covariance=False,
             )
             # For an additive kernel, the total noise is the sum of individual noises
             total_noise_variance = np.exp(rbf_sn) + np.exp(per_sn)
@@ -956,7 +1024,11 @@ class SOGP:
             raise ValueError(f"Unsupported kernel for HPO: {kernel_name}")
 
         # --- Compute NLML (Valid for all kernels) ---
-        K_y = K_f + total_noise_variance * np.eye(num_samples) + np.eye(num_samples) * 1e-9
+        K_y = (
+            K_f
+            + total_noise_variance * np.eye(num_samples)
+            + np.eye(num_samples) * 1e-9
+        )
         try:
             K_y_inv = inv(K_y)
         except np.linalg.LinAlgError:
@@ -980,37 +1052,60 @@ class SOGP:
         # Gradients for kernel-specific parameters
         if kernel_name == "RBF_ARD":
             # (Code for RBF_ARD gradient)
-            pass # Placeholder for brevity
+            pass  # Placeholder for brevity
         elif kernel_name == "RBF_ISO":
             # (Code for RBF_ISO gradient)
-            pass # Placeholder for brevity
+            pass  # Placeholder for brevity
         elif kernel_name == "PERIODIC":
             # (Code for PERIODIC gradient)
-            pass # Placeholder for brevity
+            pass  # Placeholder for brevity
         ## NEW ##
         elif kernel_name == "COMBINATION":
             # Unpack for clarity
             rbf_l, rbf_sf, rbf_sn, per_l, per_sf, per_sn, period = hyperparameters_flat
 
             # Deconstruct K_f to get gradients for each part
-            K_rbf = SOGP._compute_rbf_iso_kernel(X_hpo[:, :-1], X_hpo[:, :-1], input_dim - 1, rbf_l, rbf_sf, rbf_sn, self_covariance=False)
-            K_per = SOGP._compute_periodic_kernel(X_hpo[:, -1:], X_hpo[:, -1:], 1, per_l, per_sf, per_sn, period, self_covariance=False)
+            K_rbf = SOGP._compute_rbf_iso_kernel(
+                X_hpo[:, :-1],
+                X_hpo[:, :-1],
+                input_dim - 1,
+                rbf_l,
+                rbf_sf,
+                rbf_sn,
+                self_covariance=False,
+            )
+            K_per = SOGP._compute_periodic_kernel(
+                X_hpo[:, -1:],
+                X_hpo[:, -1:],
+                1,
+                per_l,
+                per_sf,
+                per_sn,
+                period,
+                self_covariance=False,
+            )
 
             # Grad w.r.t RBF log-signal-variance
             grad[1] = 0.5 * np.trace(common_term @ (2 * K_rbf))
             # Grad w.r.t RBF log-noise-variance
-            grad[2] = 0.5 * np.trace(common_term @ (2 * np.exp(rbf_sn) * np.eye(num_samples)))
+            grad[2] = 0.5 * np.trace(
+                common_term @ (2 * np.exp(rbf_sn) * np.eye(num_samples))
+            )
 
             # Grad w.r.t Periodic log-signal-variance
             grad[4] = 0.5 * np.trace(common_term @ (2 * K_per))
             # Grad w.r.t Periodic log-noise-variance
-            grad[5] = 0.5 * np.trace(common_term @ (2 * np.exp(per_sn) * np.eye(num_samples)))
+            grad[5] = 0.5 * np.trace(
+                common_term @ (2 * np.exp(per_sn) * np.eye(num_samples))
+            )
 
             # Grad w.r.t RBF log-length-scale
             length_scale_rbf = np.exp(rbf_l)
             x_rbf = X_hpo[:, :-1]
             x_sum_sq = np.sum(x_rbf**2, axis=1, keepdims=True)
-            dist_sq_rbf = np.maximum(0, -2 * np.dot(x_rbf, x_rbf.T) + x_sum_sq + x_sum_sq.T)
+            dist_sq_rbf = np.maximum(
+                0, -2 * np.dot(x_rbf, x_rbf.T) + x_sum_sq + x_sum_sq.T
+            )
             dK_d_log_l_rbf = K_rbf * (dist_sq_rbf / (length_scale_rbf**2))
             grad[0] = 0.5 * np.trace(common_term @ dK_d_log_l_rbf)
 
@@ -1026,7 +1121,11 @@ class SOGP:
             if abs(period) > 1e-9:
                 dist_per = np.abs(x_per - x_per.T)
                 sin_2term = np.sin(2 * np.pi * dist_per / period)
-                dK_dp = (K_per * (2 * np.pi * dist_per / (length_scale_per**2 * period**2)) * sin_2term)
+                dK_dp = (
+                    K_per
+                    * (2 * np.pi * dist_per / (length_scale_per**2 * period**2))
+                    * sin_2term
+                )
                 grad[6] = 0.5 * np.trace(common_term @ dK_dp)
 
         return negative_log_marginal_likelihood, grad
@@ -1041,7 +1140,10 @@ class SOGP:
         Tunes hyperparameters using Conjugate Gradient descent on the provided data.
         """
         if X_hpo.shape[0] < 2:
-            warnings.warn(f"Not enough HPO data ({X_hpo.shape[0]} points) for tuning. Skipping.", UserWarning)
+            warnings.warn(
+                f"Not enough HPO data ({X_hpo.shape[0]} points) for tuning. Skipping.",
+                UserWarning,
+            )
             return
 
         # Get initial hyperparameters as a flat vector
@@ -1052,18 +1154,19 @@ class SOGP:
             nlml, grad_nlml = SOGP._objective_and_gradient_static(
                 h_params, X_hpo, Y_hpo, self.input_dim, self.kernel_name
             )
-            return nlml, grad_nlml # Return positive NLML and its gradient
+            return nlml, grad_nlml  # Return positive NLML and its gradient
 
         # Very basic CG implementation for demonstration
         # In a real-world scenario, scipy.optimize.minimize is recommended
         # e.g., from scipy.optimize import minimize
-        # res = minimize(objective_grad, hyperparameters, method='CG', jac=True, options={'maxiter': max_cg_iter})
+        # res = minimize(objective_grad, hyperparameters, method='CG', jac=True,
+        #                options={'maxiter': max_cg_iter})
         # self.set_hyperparameters_flat(res.x)
 
         # Manual CG implementation
         f_val, f_prime = objective_grad(hyperparameters)
-        d = -f_prime # Initial search direction
-        r = -f_prime # Initial residual
+        d = -f_prime  # Initial search direction
+        r = -f_prime  # Initial residual
 
         for i in range(max_cg_iter):
             # A simple line search could be implemented here to find step size 'alpha'
@@ -1077,7 +1180,7 @@ class SOGP:
 
             # Polak-Ribière update for beta
             beta = np.dot(r_new.T, r_new - r) / (np.dot(r.T, r) + 1e-9)
-            beta = max(0, beta) # Ensure descent direction
+            beta = max(0, beta)  # Ensure descent direction
 
             # Update search direction
             d = r_new + beta * d
@@ -1085,7 +1188,6 @@ class SOGP:
 
         self.set_hyperparameters_flat(hyperparameters)
         print(f"HPO Complete. Final NLML: {f_val:.4f}")
-
 
     def get_hpo_data_buffer(self) -> Optional[Tuple[np.ndarray, np.ndarray]]:
         """Returns the data currently in the HPO buffer."""

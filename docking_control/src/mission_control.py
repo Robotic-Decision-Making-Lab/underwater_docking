@@ -19,7 +19,6 @@ from casadi import evalf
 import sys
 
 sys.path.insert(0, "/home/ros/ws_dock/src/underwater_docking/docking_control/src")
-from auto_dock import MPControl  # noqa: E402
 from odl_controller import ODL  # noqa: E402
 
 
@@ -319,7 +318,7 @@ class BlueROV2:
             y = pose.pose.orientation.y
             z = pose.pose.orientation.z
             w = pose.pose.orientation.w
-            euler = R.from_quat([x, y, z, w]).as_euler("xyz")
+            R.from_quat([x, y, z, w]).as_euler("xyz")
             # roll = euler[0]
             # pitch = euler[1]
             # yaw = euler[2]
@@ -546,7 +545,9 @@ class BlueROV2:
         else:
             x0 = self.rov_odom
 
-        xr = np.array([[-1.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
+        xr = np.array(
+            [[-1.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
+        ).T
 
         try:
             if self.mpc.gp_enabled and self.mpc.sogp_models:
@@ -558,7 +559,9 @@ class BlueROV2:
                     self.timestamp,
                 )
 
-            forces, self.wrench, converge_flag = self.mpc.run_mpc(x0, xr, self.gp_residual_pred)
+            forces, self.wrench, converge_flag = self.mpc.run_mpc(
+                x0, xr, self.gp_residual_pred
+            )
             if converge_flag:
                 msg = """
                 [BlueROV2][auto_control] ROV reached dock successfully!
