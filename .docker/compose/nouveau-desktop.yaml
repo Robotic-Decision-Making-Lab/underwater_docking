@@ -1,6 +1,6 @@
 services:
   underwater_docking:
-    image: ghcr.io/robotic-decision-making-lab/underwater_docking:jazzy-desktop
+    image: ghcr.io/robotic-decision-making-lab/underwater_docking:rolling-desktop
     environment:
       - DISPLAY=${DISPLAY}
       - XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}

@@ -1,6 +1,6 @@
 services:
   underwater_docking:
-    image: ghcr.io/robotic-decision-making-lab/underwater_docking:jazzy-robot
+    image: ghcr.io/robotic-decision-making-lab/underwater_docking:rolling-robot
     build:
       dockerfile: .docker/Dockerfile
       target: robot

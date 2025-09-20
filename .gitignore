@@ -3,6 +3,8 @@ devel
 install
 log
 
+/c_generated_code
+
 *.tar.gz
 *.png
 *.pyc
@@ -13,3 +15,4 @@ log
 *.stl
 *.dae
 *.m
+acados_ocp.json

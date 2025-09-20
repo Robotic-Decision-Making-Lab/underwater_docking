@@ -1,4 +1,3 @@
 [codespell]
-# Uncomment and populate the following so that codespell ignores the specified words/files
-# skip =
-ignore-words-list = sitl
+skip = *.json
+ignore-words-list = parm,ned,sitl

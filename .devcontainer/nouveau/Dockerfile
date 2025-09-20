@@ -1,4 +1,4 @@
-FROM ghcr.io/robotic-decision-making-lab/underwater_docking:jazzy-desktop
+FROM ghcr.io/robotic-decision-making-lab/underwater_docking:rolling-desktop
 
 # Install ROS dependencies
 # This is done in a previous stage, but we include it again here in case anyone wants to
