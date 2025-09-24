@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
 
-import rospy
+import os
+import sys
 import time
+
 import numpy as np
 import pandas as pd
-import os
-from std_msgs.msg import Float32MultiArray, MultiArrayDimension
+import rospy
+from casadi import evalf
 from geometry_msgs.msg import PoseStamped, WrenchStamped
-from sensor_msgs.msg import Joy, BatteryState, FluidPressure
-from nav_msgs.msg import Odometry
 from mavros_msgs.msg import OverrideRCIn, State
+from mavros_msgs.srv import CommandBool
+from nav_msgs.msg import Odometry
+from scipy.spatial.transform import Rotation as R
+from sensor_msgs.msg import BatteryState, FluidPressure, Joy
+from std_msgs.msg import Float32MultiArray, MultiArrayDimension
+from std_srvs.srv import SetBool
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
-from mavros_msgs.srv import CommandBool
-from std_srvs.srv import SetBool
-from scipy.spatial.transform import Rotation as R
-from casadi import evalf
-import sys
 
 sys.path.insert(0, "/home/ros/ws_dock/src/underwater_docking/docking_control/src")
 from odl_controller import ODL  # noqa: E402
@@ -131,6 +132,10 @@ class BlueROV2:
             "/docking_control/vision_pose/pose", PoseStamped, self.rov_pose_cb
         )
 
+        self.waypoint_sub = rospy.Subscriber(
+            "/sianat/waypoint", PoseStamped, self.waypoint_cb
+        )
+
     def initialize_publishers(self):
         # Set up publishers
         # self.control_pub = rospy.Publisher(
@@ -167,6 +172,10 @@ class BlueROV2:
     def wrap_pi2negpi(self, angle):
         """Wrap angle to [-pi, pi]"""
         return ((angle + np.pi) % (2 * np.pi)) - np.pi
+
+    def waypoint_cb(self, msg: PoseStamped):
+        self.xr = np.array([[msg.pose.position.x], [msg.pose.position.z], [msg.pose.position.z], [0], [0], [0], [0], [0], [0], [0], [0], [0]])
+
 
     def pressure_cb(self, data):
         """Callback function for the pressure sensor
@@ -318,14 +327,10 @@ class BlueROV2:
             y = pose.pose.orientation.y
             z = pose.pose.orientation.z
             w = pose.pose.orientation.w
-            R.from_quat([x, y, z, w]).as_euler("xyz")
-            # roll = euler[0]
-            # pitch = euler[1]
-            # yaw = euler[2]
-            roll = 0.0
-            pitch = 0.0
-            yaw = 0.0
-            # yaw = np.arctan(y/-x)
+            euler = R.from_quat([x, y, z, w]).as_euler("xyz")
+            roll = euler[0]
+            pitch = euler[1]
+            yaw = euler[2]
             self.rov_pose = np.zeros((6, 1))
             self.rov_pose[0][0] = -pose.pose.position.x
             self.rov_pose[1][0] = pose.pose.position.y
@@ -545,9 +550,14 @@ class BlueROV2:
         else:
             x0 = self.rov_odom
 
-        xr = np.array(
-            [[-1.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
-        ).T
+
+        if self.xr is None:
+            return
+            xr = np.array(
+                [[-1.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
+            ).T
+        else:
+            xr = self.xr
 
         try:
             if self.mpc.gp_enabled and self.mpc.sogp_models:
