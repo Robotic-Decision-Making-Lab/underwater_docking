@@ -53,6 +53,7 @@ class BlueROV2:
 
         self.rov_odom = None
         self.dock_odom = None
+        self.xr = None
 
         self.first_pose_flag = True
         self.previous_rov_pose = None
@@ -174,8 +175,21 @@ class BlueROV2:
         return ((angle + np.pi) % (2 * np.pi)) - np.pi
 
     def waypoint_cb(self, msg: PoseStamped):
-        self.xr = np.array([[msg.pose.position.x], [msg.pose.position.z], [msg.pose.position.z], [0], [0], [0], [0], [0], [0], [0], [0], [0]])
+        """Callback function for waypoint updates
 
+        Args:
+            msg: The PoseStamped message containing the waypoint information
+        """
+        try:
+            self.xr = np.zeros((12, 1))
+            self.xr[0, 0] = msg.pose.position.x
+            self.xr[1, 0] = msg.pose.position.y
+            self.xr[2, 0] = msg.pose.position.z
+        except Exception:
+            rospy.logerr_throttle(
+                10, "[BlueROV2][waypoint_cb] Not receiving waypoint data"
+            )
+            return
 
     def pressure_cb(self, data):
         """Callback function for the pressure sensor
@@ -550,12 +564,11 @@ class BlueROV2:
         else:
             x0 = self.rov_odom
 
-
         if self.xr is None:
+            rospy.logerr_throttle(
+                10, "[BlueROV2][auto_control] Waypoint not initialized"
+            )
             return
-            xr = np.array(
-                [[-1.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
-            ).T
         else:
             xr = self.xr
 
