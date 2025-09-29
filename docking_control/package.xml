@@ -22,8 +22,8 @@
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>std_msgs</depend>
-  <depend version_eq="1.19.5">python3-numpy</depend>
-  <depend version_eq="1.10.1">python3-scipy</depend>
+  <depend>python3-numpy</depend>
+  <depend>python3-scipy</depend>
   <depend>python3-opencv</depend>
   <depend>python3-pandas</depend>
   <depend>python3-tqdm</depend>

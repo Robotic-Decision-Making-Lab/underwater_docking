@@ -68,6 +68,11 @@ ENV USER=$USERNAME
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Install specific versions of scipy and numpy
+WORKDIR /home/$USERNAME
+RUN pip install numpy==1.19.5 \
+    scipy==1.10.1
+
 # Install MAVROS dependencies
 WORKDIR /home/$USERNAME
 RUN wget https://raw.githubusercontent.com/mavlink/mavros/ros2/mavros/scripts/install_geographiclib_datasets.sh \
