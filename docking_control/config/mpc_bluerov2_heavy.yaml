@@ -6,13 +6,14 @@ full_body: True
 control_axes: 6
 
 cbf:
-    enabled: True
-    penalty: 10000.0
-    settling_time: 0.1
-    type: frustum # Options: sphere, tube, frustum
-    specs:
-        start_radius: 0.5
-        end_radius: 0.1
+  enabled: False
+  penalty: 10000.0
+  settling_time: 0.1
+  type: tube # Options: sphere, tube, frustum
+  specs:
+    start_radius: 0.5
+    end_radius: 0.1
+    radius: 0.25
 
 noises:
   # Process noise (how much we trust the physics model)
@@ -44,35 +45,50 @@ penalty:
   #     100, 100, 100]
   # P: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
   P: [
-    # Position (x, y, z)
-    100.0, 200.0, 100.0,
+      # Position (x, y, z)
+      200.0,
 
-    # Orientation (roll, pitch, yaw)
-    500.0, 500.0, 200.0,
+      250.0,
+      200.0,
+      # Orientation (roll, pitch, yaw)
+      500.0,
 
-    # Linear Velocity (u, v, w)
-    250.0, 250.0, 250.0,
+      500.0,
+      250.0,
+      # Linear Velocity (u, v, w)
+      50.0,
 
-    # Angular Velocity (p, q, r)
-    500.0, 500.0, 500.0
-  ]
-
+      50.0,
+      50.0,
+      # Angular Velocity (p, q, r)
+      200.0,
+      200.0,
+      100.0,
+    ]
 
   # Q: [0., 0., 0., 0., 0., 0.]
   # Q: [1, 1, 1, 1, 1, 1]
   Q: [
-    # Position (x, y, z)
-    100.0, 200.0, 100.0,
+      # Position (x, y, z)
+      200.0,
 
-    # Orientation (roll, pitch, yaw)
-    500.0, 500.0, 200.0,
+      250.0,
+      200.0,
+      # Orientation (roll, pitch, yaw)
+      500.0,
 
-    # Linear Velocity (u, v, w)
-    250.0, 250.0, 250.0,
+      500.0,
+      250.0,
+      # Linear Velocity (u, v, w)
+      25.0,
 
-    # Angular Velocity (p, q, r)
-    500.0, 500.0, 500.0
-  ]
+      25.0,
+      25.0,
+      # Angular Velocity (p, q, r)
+      100.0,
+      100.0,
+      50.0,
+    ]
 
   # R: [100, 100, 100, 100, 100, 100]
   # R: [10, 10, 10, 10, 10, 10]
@@ -81,12 +97,16 @@ penalty:
   # R: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
   # R: [0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
   R: [
-    # Force (Fx, Fy, Fz)
-    0.05, 0.5, 0.05,
+      # Force (Fx, Fy, Fz)
+      0.05,
 
-    # Torque (Tx, Ty, Tz)
-    100.0, 100.0, 0.5
-  ]
+      0.5,
+      0.005,
+      # Torque (Tx, Ty, Tz)
+      100.0,
+      100.0,
+      0.5,
+    ]
 
   R_pwm: 1e-4
 

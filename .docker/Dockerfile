@@ -70,8 +70,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install specific versions of scipy and numpy
 WORKDIR /home/$USERNAME
-RUN pip install numpy==1.19.5 \
-    scipy==1.10.1
+RUN pip3 install -U pandas numpy scipy
 
 # Install MAVROS dependencies
 WORKDIR /home/$USERNAME

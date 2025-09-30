@@ -303,6 +303,8 @@ class ODL:
             print("----------------------------------------------")
             print(f"Axes Forces: {np.round(wrench, 2).T}")
             print("----------------------------------------------")
+            print(f"GP Residual: {np.round(residual, 3).T}")
+            print("----------------------------------------------")
             print(f"Initial Vehicle Pose: {np.round(x0[0:6], 3).T}")
             print(f"Initial Vehicle Velocity: {np.round(x0[6:12], 3).T}")
             # print("----------------------------------------------")

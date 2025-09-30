@@ -545,6 +545,8 @@ class BlueROV2:
         Args:
             joy: Joy message
         """
+        self.mpc.mpc.initialize_cbf()
+
         # Switch out of autonomous mode if thumbstick input is detected
         # Grab the values of the control sticks
         axes = joy.axes
@@ -554,6 +556,7 @@ class BlueROV2:
         if sum(control_sticks) > 0:
             # Set mode to manual
             self.mode_flag = "manual"
+            self.mpc.mpc.cbf_flag = False
             return
 
         if self.rov_odom is None:
