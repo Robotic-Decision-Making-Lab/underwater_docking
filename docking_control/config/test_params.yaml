@@ -33,9 +33,12 @@ gp:
     length_scale: 0.75
     variance: 0.75
     noise_variance: 0.05
+    # period: 1.5
     period: 1.9
+    # period: 2.1
     periodic_length_scale: 1.0
     periodic_variance: 0.0015
+    # periodic_variance: 0.005625
     periodic_noise_variance: 0.01
   threshold: 0.05
   max_bvs: 300

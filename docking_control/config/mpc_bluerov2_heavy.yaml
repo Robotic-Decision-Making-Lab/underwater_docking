@@ -45,7 +45,7 @@ penalty:
   Q: [
       # Position (x, y, z)
       500.0,  # X Position (Very high for precise tracking)
-      350.0,  # Y Position (High, but less than X/Z)
+      500.0,  # Y Position (High, but less than X/Z)
       750.0,  # Z Position (Highest priority for aggressive vertical control)
 
       # Orientation (roll, pitch, yaw)
@@ -66,7 +66,7 @@ penalty:
 
   # P: Terminal state penalties - Set equal to Q for consistent tracking
   P: [
-      500.0, 350.0, 750.0,  # Position
+      500.0, 500.0, 750.0,  # Position
       500.0, 500.0, 1000.0,  # Orientation
       10.0, 10.0, 10.0,     # Linear Velocity
       30.0, 30.0, 10.0      # Angular Velocity
@@ -76,8 +76,8 @@ penalty:
   R: [
       # Force (Fx, Fy, Fz)
       0.05,  # Fx (Very cheap for maximum forward/backward thrust)
-      0.25,  # Fy (Slightly more expensive for smoother lateral moves)
-      0.01, # Fz (Extremely cheap for rapid depth changes)
+      0.5,  # Fy (Slightly more expensive for smoother lateral moves)
+      0.025, # Fz (Extremely cheap for rapid depth changes)
 
       # Torque (Tx, Ty, Tz)
       25.0,   # Roll Torque (Still expensive to prevent instability)

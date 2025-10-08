@@ -1,4 +1,3 @@
-/BlueROV2/video
 /docking_control/gp_residual
 /docking_control/mpc
 /docking_control/mpc_pwm
@@ -63,18 +62,6 @@
 /mavros/vision_pose/pose
 /mavros/vision_pose/pose_cov
 /mavros/vision_speed/speed_twist_cov
-/oculus/draw_sonar/parameter_descriptions
-/oculus/draw_sonar/parameter_updates
-/oculus/drawn_sonar
-/oculus/drawn_sonar_rect
-/oculus/nodelet_manager/bond
-/oculus/oculus_metadata
-/oculus/oculus_simple_ping_result
-/oculus/oculus_sonar_driver/parameter_descriptions
-/oculus/oculus_sonar_driver/parameter_updates
-/oculus/raw_data
-/oculus/sonar_image
-/oculus/sonar_image_proc_timing
 /tf
 /tf_static
 /odometry/filtered

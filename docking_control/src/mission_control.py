@@ -78,6 +78,8 @@ class BlueROV2:
         self.timestamp = 0.0
         self.prev_odom = np.zeros((12, 1))
 
+        self.battery_voltage = None
+
         self.load_pwm_lookup()
 
         # self.mpc = MPControl()
@@ -121,7 +123,7 @@ class BlueROV2:
         # Set up subscribers
         self.joy_sub = rospy.Subscriber("/joy", Joy, self.store_sub_data, "joy")
         self.battery_sub = rospy.Subscriber(
-            "/mavros/battery", BatteryState, self.store_sub_data, "battery"
+            "/mavros/battery", BatteryState, self.battery_cb
         )
         self.state_subs = rospy.Subscriber(
             "/mavros/state", State, self.store_sub_data, "state"
@@ -375,6 +377,19 @@ class BlueROV2:
                 10, "[BlueROV2][store_sub_data] Not receiving {} data".format(key)
             )
 
+    def battery_cb(self, battery):
+        """Store battery volatage
+
+        Args:
+            battery: _description_
+        """
+        try:
+            self.battery_voltage = battery.voltage
+        except Exception:
+            rospy.logerr_throttle(
+                10, "[BlueROV2][battery_cb] Not receiving battery data"
+            )
+
     def thrust_to_pwm(self, thrust):
         """Convert thrust values to pwm values
 
@@ -472,6 +487,20 @@ class BlueROV2:
             self.arm()
 
         # set autonomous or manual control (manual control default)
+        # if not self.battery_voltage:
+        #     rospy.logerr_throttle(
+        #         10, "[BlueROV2][controller] No battery voltage data. Cannot control ROV!"
+        #     )
+        #     return
+        # elif self.battery_voltage < 14.0:
+        #     rospy.logerr_throttle(
+        #         10,
+        #         "[BlueROV2][controller] Battery voltage too low ("
+        #         + str(self.battery_voltage)
+        #         + " V). Cannot control ROV!",
+        #     )
+        #     return
+        # else:
         if self.mode_flag == "auto":
             if not self.rc_passthrough_flag:
                 # Enable RC Passthrough Mode
@@ -605,7 +634,7 @@ class BlueROV2:
 
                 # pwm = self.calculate_pwm_from_thrust_curve(forces.flatten())
 
-                if distance_to_dock <= 0.30:
+                if distance_to_dock <= 0.25:
                     # set pwm thrust to just move forward with full speed
                     # forces[1:] *= 15.0
                     pwm = self.calculate_pwm_from_thrust_curve(forces.flatten())
