@@ -266,6 +266,10 @@ class ODL:
             residual if self.gp_enabled else np.zeros_like(residual)
         )
 
+        if abs(xr[0, 0]) < 0.30:
+            xr[3:6, :] = 0.0
+            xr[9:12, :] = 0.0
+
         process_t0 = time.perf_counter()
         self.distance = np.linalg.norm(x0[0:3, :] - xr[0:3, :])
 
@@ -293,6 +297,14 @@ class ODL:
 
             # x_dot_sim = self.auv.compute_nonlinear_dynamics(x=x0, u=wrench)
             # x_sim = x0 + evalf(x_dot_sim).full() * self.dt
+
+            # if xr is close to the dock, send the self.distance back to the controller
+            # else send a large number
+            if abs(xr[0, 0]) < 0.3:
+                wrench *= 20.0
+                distance_to_dock = self.distance
+            else:
+                distance_to_dock = 100.0
 
             self.comp_time = time.perf_counter() - process_t0
 
@@ -323,7 +335,9 @@ class ODL:
 
             self.time_id += 1
 
-            return u, wrench, False
+
+
+            return u, wrench, False, distance_to_dock
 
 
 if __name__ == "__main__":

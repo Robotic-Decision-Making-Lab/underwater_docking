@@ -70,7 +70,7 @@ class Video:
 
         # Create a sink to get data
         self.video_sink_conf = (
-            "! appsink emit-signals=true sync=false max-buffers=2 drop=true"
+            "! appsink emit-signals=true sync=false max-buffers=2 drop=false"
         )
 
         self.video_pipe = None

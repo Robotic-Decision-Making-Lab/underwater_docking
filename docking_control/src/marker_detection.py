@@ -94,7 +94,7 @@ class Aruco:
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer)
         self.initialize_subscribers_publishers()
-        rospy.Timer(rospy.Duration(0.1), self.marker_detection_callback)
+        rospy.Timer(rospy.Duration(0.05), self.marker_detection_callback)
 
     def load_camera_config(self):
         """Loads camera calibration parameters from a YAML file."""
@@ -123,7 +123,7 @@ class Aruco:
             Image,
             self.image_callback,
             queue_size=1,
-            buff_size=2**24,
+            # buff_size=2**24,
         )
         self.image_pub = rospy.Publisher(
             "/docking_control/marker_detection", Image, queue_size=1
@@ -186,8 +186,8 @@ class Aruco:
         height, width = frame.shape[:2]
         center = (width // 2, height // 2)
         cv2.circle(frame, center, 5, (0, 255, 0), -1)
-        cv2.imshow("Marker Detection", frame)
-        cv2.waitKey(1)  # This is crucial for the window to update
+        # cv2.imshow("Marker Detection", frame)
+        # cv2.waitKey(1)  # This is crucial for the window to update
 
         # Also publish the annotated image to a ROS topic
         self.publish_annotated_image(frame)

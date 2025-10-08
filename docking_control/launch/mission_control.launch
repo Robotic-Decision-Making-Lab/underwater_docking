@@ -48,44 +48,16 @@
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="dock_to_map" args="0 0 0 0 0 0 dock map" />
 
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker1_to_dock_tf_broadcaster" args="0 0 0 0 0 0 marker_1 dock" /> -->
-  <node pkg="tf2_ros" type="static_transform_publisher" name="marker15_to_dock_tf_broadcaster" args="0 0 0 0 1.571 -1.571  marker_15 dock" />
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker14_to_dock_tf_broadcaster" args="0 0 0 0 0 0 marker_14 dock" /> -->
+  <!-- Inner Tags -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="marker18_to_dock_tf_broadcaster" args="0 -0.1025 0.259 0 1.571 -1.571  marker_18 dock" />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="marker17_to_marker18_tf_broadcaster" args="0.227 0.073 0 0 0 0  marker_17 marker_18" />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="marker16_to_marker17_tf_broadcaster" args="-0.386 0 0 0 0 0  marker_16 marker_17" />
 
-
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker15_to_map_tf_broadcaster" args="0 0 0 0 0 0 marker_15 map" /> -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker3_to_map_tf_broadcaster" args="0.035 -0.17 0.334 0 1.571 -1.571 marker_3 map" /> -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker3_to_map_tf_broadcaster" args="0.015 -0.24 0.334 0 1.571 -1.571 marker_3 map" /> -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker3_to_dock_tf_broadcaster" args="0.015 -0.24 0.334 0 1.571 -1.571 marker_3 dock" /> -->
-
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="base_link_to_base_footprint" args="0 0 0 0 0 0 base_link base_footprint" /> -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_marker1_tf_broadcaster" args="1 0 0 0 0 0 map marker_1" /> -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker1_to_map_tf_broadcaster" args="0 0 0 0 1.571 -1.571 marker_1 map" /> -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker7_to_map_tf_broadcaster" args="0.225 0.021 0.434 0 1.571 -1.571 marker_7 map" /> -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker7_to_map_tf_broadcaster" args="0.33 -0.10 0.434 0 1.571 -1.571 marker_7 map" /> -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker7_to_marker3_tf_broadcaster" args="0.225 0.19 0.0 0 0 0 marker_7 marker_3" /> -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker7_to_map_tf_broadcaster" args="0.1869 0.021 0.434 0 1.571 -1.571 marker_7 map" /> -->
-
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker8_to_marker7_tf_broadcaster" args="-0.3019 -0.036 0 0 0 0 marker_8 marker_7" /> -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker8_to_marker7_tf_broadcaster" args="-0.35 0.036 0 0 0 0 marker_8 marker_7" /> -->
-
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker2_to_marker8_tf_broadcaster" args="-0.301 0.345 -0.868 0 0 0 marker_2 marker_8" /> -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker2_to_marker8_tf_broadcaster" args="-0.301 0.345 -0.88 0 0 0 marker_2 marker_8" /> -->
-
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker11_to_marker2_tf_broadcaster" args="0.835 0.002 0 0 0 0 marker_11 marker_2" /> -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker11_to_marker2_tf_broadcaster" args="0.88 0.002 0 0 0 0 marker_11 marker_2" /> -->
-
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker9_to_marker11_tf_broadcaster" args="-0.004 -0.705 0 0 0 0 marker_9 marker_11" /> -->
-
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker10_to_marker9_tf_broadcaster" args="-0.8535 -1.799 0 0 0 0 marker_10 marker_9" /> -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker10_to_marker9_tf_broadcaster" args="-0.88 0 0 0 0 0 marker_10 marker_9" /> -->
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker4_to_marker9_tf_broadcaster" args="-0.75 0 0 0 0 0 marker_4 marker_9" /> -->
-
-  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker8_to_marker7_tf_broadcaster" args="-0.3019 -0.036 0 0 0 0 marker_8 marker_7 " />
-  <node pkg="tf2_ros" type="static_transform_publisher" name="marker2_to_marker7_tf_broadcaster" args="-0.6045 0.381 -0.868 0 0 0 marker_2 marker_7 " />
-  <node pkg="tf2_ros" type="static_transform_publisher" name="marker9_to_marker7_tf_broadcaster" args="0.2265 -0.3195 -0.868 0 0 0 marker_9 marker_7 " />
-  <node pkg="tf2_ros" type="static_transform_publisher" name="marker10_to_marker7_tf_broadcaster" args="-0.6269 -0.3375 -0.868 0 0 0 marker_10 marker_7 " />
-  <node pkg="tf2_ros" type="static_transform_publisher" name="marker11_to_marker7_tf_broadcaster" args="0.2305 0.383 -0.868 0 0 0 marker_11 marker_7 " /> -->
+  <!-- Front Tags -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="marker12_to_marker16_tf_broadcaster" args="-0.201 -0.357 -0.862 0 0 0  marker_12 marker_16" />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="marker15_to_marker12_tf_broadcaster" args="-0.025 0.693 0 0 0 0  marker_15 marker_12" />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="marker7_to_marker15_tf_broadcaster" args="0.807 0.036 0 0 0 0  marker_7 marker_15" />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="marker14_to_marker7_tf_broadcaster" args="-0.027 -0.655 0 0 0 0  marker_14 marker_7" />
 
   <param name="robot_description" command="$(find xacro)/xacro $(arg robot_description_xacro)"/>
   <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" />
@@ -102,6 +74,14 @@
 
   <node pkg="docking_control" type="mission_control.py" name="mission_control" output="$(arg log_output)" launch-prefix="taskset -c 5" />
 
-  <!-- <node pkg="rviz" type="rviz" name="rviz" args="-d $(find docking_control)/rviz/bluerov.rviz" /> -->
+  <node pkg="planner" type="main" name="planner" output="$(arg log_output)" launch-prefix="taskset -c 7" />
+
+  <!-- <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true" output="$(arg log_output)" launch-prefix="taskset -c 8">
+    <rosparam command="load" file="$(find docking_control)/config/ekf.yaml"/>
+  </node> -->
+
+  <!-- <node pkg="sonar_odom" type="main" name="sonar_odom" output="$(arg log_output)" launch-prefix="taskset -c 9" /> -->
+
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find docking_control)/rviz/bluerov.rviz" />
 
 </launch>

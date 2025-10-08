@@ -14,10 +14,12 @@ from mavros_msgs.srv import CommandBool
 from nav_msgs.msg import Odometry
 from scipy.spatial.transform import Rotation as R
 from sensor_msgs.msg import BatteryState, FluidPressure, Joy
-from std_msgs.msg import Float32MultiArray, MultiArrayDimension
+from std_msgs.msg import Float32MultiArray, MultiArrayDimension, Float64
 from std_srvs.srv import SetBool
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
+import tf.transformations
+from copy import deepcopy
 
 sys.path.insert(0, "/home/ros/ws_dock/src/underwater_docking/docking_control/src")
 from odl_controller import ODL  # noqa: E402
@@ -68,6 +70,7 @@ class BlueROV2:
         self.light_level = 1500
         self.camera_tilt = 1500
         self.rc_passthrough_flag = False
+        self.altitude = 0.0
 
         self.gp_residual_pred = np.zeros((12, 1))
         self.wrench = np.zeros((6, 1))
@@ -126,15 +129,17 @@ class BlueROV2:
         self.pressure_sub = rospy.Subscriber(
             "/mavros/imu/static_pressure", FluidPressure, self.pressure_cb
         )
-        # self.rov_odom_sub = rospy.Subscriber(
-        #     "/mavros/local_position/odom", Odometry, self.rov_odom_cb
-        # )
         self.rov_pose_sub = rospy.Subscriber(
             "/docking_control/vision_pose/pose", PoseStamped, self.rov_pose_cb
         )
-
+        self.rov_odom_sub = rospy.Subscriber(
+            "/odometry/filtered", Odometry, self.rov_odom_cb
+        )
         self.waypoint_sub = rospy.Subscriber(
             "/sianat/waypoint", PoseStamped, self.waypoint_cb
+        )
+        self.altitude_sub = rospy.Subscriber(
+            "/mavros/global_position/rel_alt", Float64, self.altitude_cb
         )
 
     def initialize_publishers(self):
@@ -151,8 +156,23 @@ class BlueROV2:
         self.mpc_output = rospy.Publisher(
             "/docking_control/mpc", Float32MultiArray, queue_size=1
         )
+        self.gp_output_pub = rospy.Publisher(
+            "/docking_control/gp_residual", Float32MultiArray, queue_size=1
+        )
+        self.x_nom_pub = rospy.Publisher(
+            "/docking_control/x_nom", Float32MultiArray, queue_size=1
+        )
+        self.x_curr_pub = rospy.Publisher(
+            "/docking_control/x_curr", Float32MultiArray, queue_size=1
+        )
+        self.x_next_pub = rospy.Publisher(
+            "/docking_control/x_next", Float32MultiArray, queue_size=1
+        )
         self.rov_odom_pub = rospy.Publisher(
             "/docking_control/rov_odom", Odometry, queue_size=1
+        )
+        self.rov_pose_pub = rospy.Publisher(
+            "/docking_control/rov_pose", PoseStamped, queue_size=1
         )
         self.mpc_wrench_pub = rospy.Publisher(
             "/docking_control/mpc_wrench", WrenchStamped, queue_size=1
@@ -174,6 +194,13 @@ class BlueROV2:
         """Wrap angle to [-pi, pi]"""
         return ((angle + np.pi) % (2 * np.pi)) - np.pi
 
+    def altitude_cb(self, data):
+        """Receives and stores the latest altitude from the sonar."""
+        try:
+            self.altitude = -data.data
+        except Exception as e:
+            rospy.logerr(f"[MissionControl][altitude_callback] Altitude callback error: {e}")
+
     def waypoint_cb(self, msg: PoseStamped):
         """Callback function for waypoint updates
 
@@ -185,6 +212,17 @@ class BlueROV2:
             self.xr[0, 0] = msg.pose.position.x
             self.xr[1, 0] = msg.pose.position.y
             self.xr[2, 0] = msg.pose.position.z
+            euler = tf.transformations.euler_from_quaternion(
+                [
+                    msg.pose.orientation.x,
+                    msg.pose.orientation.y,
+                    msg.pose.orientation.z,
+                    msg.pose.orientation.w,
+                ]
+            )
+            self.xr[3, 0] = euler[0]
+            self.xr[4, 0] = euler[1]
+            self.xr[5, 0] = euler[2]
         except Exception:
             rospy.logerr_throttle(
                 10, "[BlueROV2][waypoint_cb] Not receiving waypoint data"
@@ -208,125 +246,34 @@ class BlueROV2:
             )
 
     def rov_odom_cb(self, odom):
-        """
-        Callback to receive odometry, transform it from ENU/FLU to NED/FRD,
-        store it in a 12x1 state vector, and republish.
+        """Listen to the filtered odometry from robot_localization
 
-        Input Odom Message:
-        - Pose (Position, Orientation): In a world-fixed ENU (East-North-Up) frame.
-        - Twist (Velocities): In a body-fixed FLU (X-Forward, Y-Left, Z-Up) frame.
-
-        Output State Vector (self.rov_odom):
-        - Position: In a world-fixed NED (North-East-Down) frame.
-        - Orientation: Euler angles of body relative to the NED frame.
-        - Velocities: In a body-fixed FRD (X-Forward, Y-Right, Z-Down) frame.
+        Args:
+            odom: The Odometry message containing the filtered odometry information
         """
         try:
-            # 1. --- Extract Data from Input Message ---
-            # Pose is in the ENU world frame
-            pos_enu = np.array(
-                [
-                    odom.pose.pose.position.x,
-                    odom.pose.pose.position.y,
-                    odom.pose.pose.position.z,
-                ]
-            )
-            # Orientation of body (FLU) relative to ENU world frame
-            quat_enu_to_body = np.array(
-                [
-                    odom.pose.pose.orientation.x,
-                    odom.pose.pose.orientation.y,
-                    odom.pose.pose.orientation.z,
-                    odom.pose.pose.orientation.w,
-                ]
-            )
-
-            # Velocities are in the body-fixed FLU frame
-            linear_vel_flu = np.array(
-                [
-                    odom.twist.twist.linear.x,
-                    odom.twist.twist.linear.y,
-                    odom.twist.twist.linear.z,
-                ]
-            )
-            angular_vel_flu = np.array(
-                [
-                    odom.twist.twist.angular.x,
-                    odom.twist.twist.angular.y,
-                    odom.twist.twist.angular.z,
-                ]
-            )
-
-            # 2. --- Define Required Transformation Rotations ---
-            # Rotation from world-fixed ENU to world-fixed NED frame
-            # x_ned = y_enu,  y_ned = x_enu,  z_ned = -z_enu
-            rot_enu_to_ned = R.from_matrix([[0, 1, 0], [1, 0, 0], [0, 0, -1]])
-
-            # Rotation from body-fixed FLU to body-fixed FRD frame
-            # x_frd = x_flu,  y_frd = -y_flu, z_frd = -z_flu
-            rot_flu_to_frd = R.from_matrix([[1, 0, 0], [0, -1, 0], [0, 0, -1]])
-
-            # 3. --- Perform Transformations ---
-            # A) Transform Pose from ENU to NED
-            pos_ned = rot_enu_to_ned.apply(pos_enu)
-
-            # B) Transform Orientation from ENU->Body to NED->Body
-            # We have the orientation of the body relative to the ENU frame.
-            # We need the orientation of the body relative to the NED frame.
-            # Logical Chain: NED -> ENU -> Body
-            # Math: R_ned_to_body = R_enu_to_body * R_ned_to_enu
-            # R_ned_to_enu is the inverse of R_enu_to_ned
-            rot_enu_to_body = R.from_quat(quat_enu_to_body)
-            rot_ned_to_body = rot_enu_to_body * rot_enu_to_ned.inv()
-
-            quat_ned = rot_ned_to_body.as_quat()
-            euler_ned = rot_ned_to_body.as_euler(
-                "xyz", degrees=False
-            )  # roll, pitch, yaw
-
-            # C) Transform Velocities from FLU body frame to FRD body frame
-            linear_vel_frd = rot_flu_to_frd.apply(linear_vel_flu)
-            angular_vel_frd = rot_flu_to_frd.apply(angular_vel_flu)
-
-            # 4. --- Store Final Values in 12x1 State Vector ---
             self.rov_odom = np.zeros((12, 1))
-            self.rov_odom[0:3, 0] = pos_ned
-            self.rov_odom[3:6, 0] = euler_ned
-            self.rov_odom[6:9, 0] = linear_vel_frd
-            self.rov_odom[9:12, 0] = angular_vel_frd
-
-            # 5. --- Republish Transformed Odometry ---
-            # This is useful for visualization in RViz and for other nodes
-            # that expect a standard NED/FRD convention.
-            odom_ned = Odometry()
-            odom_ned.header.stamp = odom.header.stamp
-            odom_ned.header.frame_id = "map_ned"  # World frame is now NED
-            odom_ned.child_frame_id = (
-                odom.child_frame_id
-            )  # Body frame name is unchanged
-
-            # Populate pose with NED data
-            odom_ned.pose.pose.position.x = pos_ned[0]
-            odom_ned.pose.pose.position.y = pos_ned[1]
-            odom_ned.pose.pose.position.z = pos_ned[2]
-            odom_ned.pose.pose.orientation.x = quat_ned[0]
-            odom_ned.pose.pose.orientation.y = quat_ned[1]
-            odom_ned.pose.pose.orientation.z = quat_ned[2]
-            odom_ned.pose.pose.orientation.w = quat_ned[3]
-
-            # Populate twist with FRD data (still in the body frame)
-            odom_ned.twist.twist.linear.x = linear_vel_frd[0]
-            odom_ned.twist.twist.linear.y = linear_vel_frd[1]
-            odom_ned.twist.twist.linear.z = linear_vel_frd[2]
-            odom_ned.twist.twist.angular.x = angular_vel_frd[0]
-            odom_ned.twist.twist.angular.y = angular_vel_frd[1]
-            odom_ned.twist.twist.angular.z = angular_vel_frd[2]
-
-            self.rov_odom_pub.publish(odom_ned)
-
+            self.rov_odom[0, 0] = odom.pose.pose.position.x
+            self.rov_odom[1, 0] = odom.pose.pose.position.y
+            self.rov_odom[2, 0] = odom.pose.pose.position.z
+            euler = tf.transformations.euler_from_quaternion(
+                [odom.pose.pose.orientation.x,
+                odom.pose.pose.orientation.y,
+                odom.pose.pose.orientation.z,
+                odom.pose.pose.orientation.w]
+            )
+            self.rov_odom[3, 0] = euler[0]
+            self.rov_odom[4, 0] = euler[1]
+            self.rov_odom[5, 0] = euler[2]
+            self.rov_odom[6, 0] = odom.twist.twist.linear.x
+            self.rov_odom[7, 0] = odom.twist.twist.linear.y
+            self.rov_odom[8, 0] = odom.twist.twist.linear.z
+            self.rov_odom[9, 0] = odom.twist.twist.angular.x
+            self.rov_odom[10, 0] = odom.twist.twist.angular.y
+            self.rov_odom[11, 0] = odom.twist.twist.angular.z
         except Exception as e:
             rospy.logerr_throttle(
-                10, f"[BlueROV2][rov_odom_cb] Error processing odometry: {e}"
+                10, "[BlueROV2][rov_odom_cb] Not receiving ROV's Odometry: {}".format(e)
             )
 
     def rov_pose_cb(self, pose):
@@ -348,10 +295,26 @@ class BlueROV2:
             self.rov_pose = np.zeros((6, 1))
             self.rov_pose[0][0] = -pose.pose.position.x
             self.rov_pose[1][0] = pose.pose.position.y
-            self.rov_pose[2][0] = pose.pose.position.z
+            # self.rov_pose[2][0] = pose.pose.position.z # relative depth
+            self.rov_pose[2][0] = self.altitude # absolute depth
             self.rov_pose[3][0] = -roll
             self.rov_pose[4][0] = pitch
             self.rov_pose[5][0] = yaw
+
+            rov_pose_msg = PoseStamped()
+            rov_pose_msg.header.stamp = pose.header.stamp
+            rov_pose_msg.header.frame_id = "map_ned"
+            rov_pose_msg.pose.position.x = self.rov_pose[0][0]
+            rov_pose_msg.pose.position.y = self.rov_pose[1][0]
+            rov_pose_msg.pose.position.z = self.rov_pose[2][0]
+            quat = tf.transformations.quaternion_from_euler(
+                self.rov_pose[3][0], self.rov_pose[4][0], self.rov_pose[5][0], "rxyz"
+            )
+            rov_pose_msg.pose.orientation.x = quat[0]
+            rov_pose_msg.pose.orientation.y = quat[1]
+            rov_pose_msg.pose.orientation.z = quat[2]
+            rov_pose_msg.pose.orientation.w = quat[3]
+            self.rov_pose_pub.publish(rov_pose_msg)
 
             if self.first_pose_flag:
                 self.rov_pose_sub_time = pose.header.stamp.to_sec()
@@ -367,34 +330,35 @@ class BlueROV2:
                 self.rov_pose_sub_time = time.time()
                 self.previous_rov_pose = self.rov_pose
 
-                self.rov_odom = np.vstack((self.rov_pose, self.rov_twist))
+                rov_odom = np.vstack((self.rov_pose, self.rov_twist))
+                # self.rov_odom = rov_odom
 
-                rov_odom = Odometry()
-                rov_odom.header.frame_id = "map_ned"
-                rov_odom.header.stamp = rospy.Time.now()
-                rov_odom.pose.pose.position.x = self.rov_odom[0][0]
-                rov_odom.pose.pose.position.y = self.rov_odom[1][0]
-                rov_odom.pose.pose.position.z = self.rov_odom[2][0]
+                rov_odom_msg = Odometry()
+                rov_odom_msg.header.frame_id = "map_ned"
+                rov_odom_msg.header.stamp = rospy.Time.now()
+                rov_odom_msg.pose.pose.position.x = rov_odom[0][0]
+                rov_odom_msg.pose.pose.position.y = rov_odom[1][0]
+                rov_odom_msg.pose.pose.position.z = rov_odom[2][0]
                 quat = R.from_euler(
                     "xyz",
-                    [self.rov_odom[3][0], self.rov_odom[4][0], self.rov_odom[5][0]],
+                    [rov_odom[3][0], rov_odom[4][0], rov_odom[5][0]],
                 ).as_quat()
-                rov_odom.pose.pose.orientation.x = quat[0]
-                rov_odom.pose.pose.orientation.y = quat[1]
-                rov_odom.pose.pose.orientation.z = quat[2]
-                rov_odom.pose.pose.orientation.w = quat[3]
-                rov_odom.twist.twist.linear.x = self.rov_odom[6][0]
-                rov_odom.twist.twist.linear.y = self.rov_odom[7][0]
-                rov_odom.twist.twist.linear.z = self.rov_odom[8][0]
-                rov_odom.twist.twist.angular.x = self.rov_odom[9][0]
-                rov_odom.twist.twist.angular.y = self.rov_odom[10][0]
-                rov_odom.twist.twist.angular.z = self.rov_odom[11][0]
+                rov_odom_msg.pose.pose.orientation.x = quat[0]
+                rov_odom_msg.pose.pose.orientation.y = quat[1]
+                rov_odom_msg.pose.pose.orientation.z = quat[2]
+                rov_odom_msg.pose.pose.orientation.w = quat[3]
+                rov_odom_msg.twist.twist.linear.x = rov_odom[6][0]
+                rov_odom_msg.twist.twist.linear.y = rov_odom[7][0]
+                rov_odom_msg.twist.twist.linear.z = rov_odom[8][0]
+                rov_odom_msg.twist.twist.angular.x = rov_odom[9][0]
+                rov_odom_msg.twist.twist.angular.y = rov_odom[10][0]
+                rov_odom_msg.twist.twist.angular.z = rov_odom[11][0]
 
-                self.rov_odom_pub.publish(rov_odom)
+                self.rov_odom_pub.publish(rov_odom_msg)
             # print(self.rov_pose)
-        except Exception:
+        except Exception as e:
             rospy.logerr_throttle(
-                10, "[BlueROV2][rov_pose_cb] Not receiving ROV's Position"
+                10, "[BlueROV2][rov_pose_cb] Not receiving ROV's Position data: {}".format(e)
             )
 
     def store_sub_data(self, data, key):
@@ -565,7 +529,7 @@ class BlueROV2:
             )
             return
         else:
-            x0 = self.rov_odom
+            x0 = deepcopy(self.rov_odom)
 
         if self.xr is None:
             rospy.logerr_throttle(
@@ -575,17 +539,31 @@ class BlueROV2:
         else:
             xr = self.xr
 
-        try:
-            if self.mpc.gp_enabled and self.mpc.sogp_models:
-                self.gp_residual_pred = self.mpc._update_and_predict_sogp(
-                    self.prev_odom,
-                    self.wrench,
-                    x0,
-                    self.x_next_nominal,
-                    self.timestamp,
-                )
+        # xr = np.zeros((12, 1))
+        # xr[0, 0] = -2.0  # desired x position
+        # xr[2, 0] = -.35  # desired depth position
 
-            forces, self.wrench, converge_flag = self.mpc.run_mpc(
+        try:
+            # Publish the current state for debugging
+            x_curr = Float32MultiArray()
+            dim = MultiArrayDimension()
+            dim.label = "X Current"
+            dim.size = 12
+            dim.stride = 1
+            x_curr.layout.dim.append(dim)
+            x_curr.data = [float(x0[i][0]) for i in range(12)]
+            self.x_curr_pub.publish(x_curr)
+
+            # if self.mpc.gp_enabled and self.mpc.sogp_models:
+            #     self.gp_residual_pred = self.mpc._update_and_predict_sogp(
+            #         self.prev_odom,
+            #         self.wrench,
+            #         x0,
+            #         self.x_next_nominal,
+            #         self.timestamp,
+            #     )
+
+            forces, self.wrench, converge_flag, distance_to_dock = self.mpc.run_mpc(
                 x0, xr, self.gp_residual_pred
             )
             if converge_flag:
@@ -603,14 +581,6 @@ class BlueROV2:
                     self.disarm()
                 self.mode_flag = "manual"
             else:
-                if self.mpc.gp_enabled and self.mpc.sogp_models:
-                    self.prev_odom = x0
-                    x_dot_nom_c = self.mpc.auv.compute_nonlinear_dynamics(
-                        x0, self.wrench, complete_model=True
-                    )
-                    x_dot_nominal = evalf(x_dot_nom_c).full()
-                    self.x_next_nominal = x0 + x_dot_nominal * self.mpc.dt
-
                 wrench_frd = WrenchStamped()
                 wrench_frd.header.frame_id = "base_link_frd"
                 wrench_frd.header.stamp = rospy.Time()
@@ -631,8 +601,20 @@ class BlueROV2:
                 mpc_op.data = [float(forces[i][0]) for i in range(8)]
                 self.mpc_output.publish(mpc_op)
 
-                # pwm = self.thrust_to_pwm(forces)
-                pwm = self.calculate_pwm_from_thrust_curve(forces.flatten())
+                # pwm = [self.neutral_pwm for _ in range(8)]
+
+                # pwm = self.calculate_pwm_from_thrust_curve(forces.flatten())
+
+                if distance_to_dock <= 0.30:
+                    # set pwm thrust to just move forward with full speed
+                    # forces[1:] *= 15.0
+                    pwm = self.calculate_pwm_from_thrust_curve(forces.flatten())
+                    pwm[0] = self.max_possible_pwm
+                    pwm[1] = self.max_possible_pwm
+                    pwm[2] = self.max_possible_pwm
+                    pwm[3] = self.max_possible_pwm
+                else:
+                    pwm = self.calculate_pwm_from_thrust_curve(forces.flatten())
 
                 for i in range(len(pwm)):
                     if pwm[i] > self.deadzone_pwm[0] and pwm[i] < self.deadzone_pwm[1]:
@@ -649,7 +631,54 @@ class BlueROV2:
 
                 self.mpc_pwm_pub.publish(override_pwm)
                 self.control_pub.publish(override_pwm)
+
+                if self.mpc.gp_enabled and self.mpc.sogp_models:
+                    x_dot_nom_c = self.mpc.auv.compute_nonlinear_dynamics(
+                        x0, self.wrench, complete_model=True
+                    )
+                    x_dot_nominal = evalf(x_dot_nom_c).full()
+                    self.x_next_nominal = x0 + x_dot_nominal * self.mpc.dt
+
+                    self.gp_residual_pred = self.mpc._update_and_predict_sogp(
+                        self.prev_odom,
+                        self.wrench,
+                        self.rov_odom,
+                        self.x_next_nominal,
+                        self.timestamp,
+                    )
+
+                # Publish the x_nom for debugging
+                x_nom = Float32MultiArray()
+                dim = MultiArrayDimension()
+                dim.label = "X Next Nominal"
+                dim.size = 12
+                dim.stride = 1
+                x_nom.layout.dim.append(dim)
+                x_nom.data = [float(self.x_next_nominal[i][0]) for i in range(12)]
+                self.x_nom_pub.publish(x_nom)
+
+                # Publish the true next odom for debugging
+                x_next = Float32MultiArray()
+                dim = MultiArrayDimension()
+                dim.label = "X Next True"
+                dim.size = 12
+                dim.stride = 1
+                x_next.layout.dim.append(dim)
+                x_next.data = [float(self.rov_odom[i][0]) for i in range(12)]
+                self.x_next_pub.publish(x_next)
+
+                # Publish the gp residual prediction for debugging
+                gp_op = Float32MultiArray()
+                dim = MultiArrayDimension()
+                dim.label = "GP Residual Prediction"
+                dim.size = 12
+                dim.stride = 1
+                gp_op.layout.dim.append(dim)
+                gp_op.data = [float(self.gp_residual_pred[i][0]) for i in range(12)]
+                self.gp_output_pub.publish(gp_op)
+
                 self.timestamp += self.mpc.dt
+
         except Exception as e:
             rospy.logerr_throttle(
                 10, "[BlueROV2][auto_control] Error in MPC Computation" + str(e)

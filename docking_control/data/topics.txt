@@ -1,10 +1,15 @@
-/docking_control/marker_detection
+/BlueROV2/video
+/docking_control/gp_residual
 /docking_control/mpc
 /docking_control/mpc_pwm
 /docking_control/mpc_wrench
 /docking_control/pwm
 /docking_control/rov_odom
+/docking_control/rov_pose
 /docking_control/vision_pose/pose
+/docking_control/x_curr
+/docking_control/x_next
+/docking_control/x_nom
 /joy
 /mavros/altitude
 /mavros/battery
@@ -61,7 +66,6 @@
 /oculus/draw_sonar/parameter_descriptions
 /oculus/draw_sonar/parameter_updates
 /oculus/drawn_sonar
-/oculus/drawn_sonar_osd
 /oculus/drawn_sonar_rect
 /oculus/nodelet_manager/bond
 /oculus/oculus_metadata
@@ -73,3 +77,6 @@
 /oculus/sonar_image_proc_timing
 /tf
 /tf_static
+/odometry/filtered
+/sianat/waypoint
+/sianat/path

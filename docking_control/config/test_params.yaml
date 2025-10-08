@@ -28,14 +28,14 @@ algorithm: odl
 
 gp:
   enabled: True
-  kernel_type: COMBINATION # Options: RBF_ISO, PERIODIC, COMBINATION, MATERN32_ISO, MATERN52_ISO
+  kernel_type: PERIODIC # Options: RBF_ISO, PERIODIC, COMBINATION, MATERN32_ISO, MATERN52_ISO
   hyperparameters:
     length_scale: 0.75
     variance: 0.75
     noise_variance: 0.05
-    period: 10.0
-    periodic_length_scale: 100.0
-    periodic_variance: 4.0
+    period: 1.9
+    periodic_length_scale: 1.0
+    periodic_variance: 0.0015
     periodic_noise_variance: 0.01
   threshold: 0.05
   max_bvs: 300

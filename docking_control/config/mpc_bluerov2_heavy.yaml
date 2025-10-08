@@ -1,4 +1,4 @@
-horizon: 10
+horizon: 20
 dt: 0.1
 quiet: True
 thrusters: 8
@@ -6,14 +6,14 @@ full_body: True
 control_axes: 6
 
 cbf:
-  enabled: False
+  enabled: True
   penalty: 10000.0
   settling_time: 0.1
   type: tube # Options: sphere, tube, frustum
   specs:
     start_radius: 0.5
     end_radius: 0.1
-    radius: 0.25
+    radius: 0.05
 
 noises:
   # Process noise (how much we trust the physics model)
@@ -41,71 +41,48 @@ noises:
   R_linacc: 1e-6
 
 penalty:
-  # P: [1, 1, 1,
-  #     100, 100, 100]
-  # P: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-  P: [
-      # Position (x, y, z)
-      200.0,
-
-      250.0,
-      200.0,
-      # Orientation (roll, pitch, yaw)
-      500.0,
-
-      500.0,
-      250.0,
-      # Linear Velocity (u, v, w)
-      50.0,
-
-      50.0,
-      50.0,
-      # Angular Velocity (p, q, r)
-      200.0,
-      200.0,
-      100.0,
-    ]
-
-  # Q: [0., 0., 0., 0., 0., 0.]
-  # Q: [1, 1, 1, 1, 1, 1]
+  # Q: Penalties on state errors. Position and Yaw penalties are very high.
   Q: [
       # Position (x, y, z)
-      200.0,
+      500.0,  # X Position (Very high for precise tracking)
+      350.0,  # Y Position (High, but less than X/Z)
+      750.0,  # Z Position (Highest priority for aggressive vertical control)
 
-      250.0,
-      200.0,
       # Orientation (roll, pitch, yaw)
-      500.0,
+      500.0,  # Roll (Extremely high for stability)
+      500.0,  # Pitch (Extremely high for stability)
+      1000.0,  # Yaw (Very high for precise heading control)
 
-      500.0,
-      250.0,
-      # Linear Velocity (u, v, w)
-      25.0,
+      # Linear Velocity (u, v, w) - Moderate damping
+      10.0,
+      10.0,
+      10.0,
 
-      25.0,
-      25.0,
-      # Angular Velocity (p, q, r)
-      100.0,
-      100.0,
-      50.0,
+      # Angular Velocity (p, q, r) - Moderate damping on rotations
+      30.0,
+      30.0,
+      10.0
     ]
 
-  # R: [100, 100, 100, 100, 100, 100]
-  # R: [10, 10, 10, 10, 10, 10]
-  # R: [1, 1, 1, 1, 1, 1]
-  # R: [0., 0., 0., 0., 0., 0.]
-  # R: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
-  # R: [0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
+  # P: Terminal state penalties - Set equal to Q for consistent tracking
+  P: [
+      500.0, 350.0, 750.0,  # Position
+      500.0, 500.0, 1000.0,  # Orientation
+      10.0, 10.0, 10.0,     # Linear Velocity
+      30.0, 30.0, 10.0      # Angular Velocity
+    ]
+
+  # R: Penalties on control inputs. Very low values to allow for aggressive thrust.
   R: [
       # Force (Fx, Fy, Fz)
-      0.05,
+      0.05,  # Fx (Very cheap for maximum forward/backward thrust)
+      0.25,  # Fy (Slightly more expensive for smoother lateral moves)
+      0.01, # Fz (Extremely cheap for rapid depth changes)
 
-      0.5,
-      0.005,
       # Torque (Tx, Ty, Tz)
-      100.0,
-      100.0,
-      0.5,
+      25.0,   # Roll Torque (Still expensive to prevent instability)
+      25.0,   # Pitch Torque (Still expensive to prevent instability)
+      0.01   # Yaw Torque (Very cheap for fast, precise heading adjustments)
     ]
 
   R_pwm: 1e-4

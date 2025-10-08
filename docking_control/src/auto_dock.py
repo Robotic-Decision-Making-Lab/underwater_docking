@@ -178,8 +178,8 @@ class MPControl:
             return np.zeros((8, 1)), np.zeros((6, 1)), True
 
         else:
-            x0[3:5, :] = 0.0
-            x0[9:11, :] = 0.0
+            # x0[3:5, :] = 0.0
+            # x0[9:11, :] = 0.0
             u, wrench = self.mpc.run_mpc(x0, xr)
 
             # x_dot_sim = self.auv.compute_nonlinear_dynamics(x=x0, u=wrench)
@@ -212,7 +212,14 @@ class MPControl:
 
             self.time_id += 1
 
-            return u, wrench, False
+            # if xr is close to the dock, send the self.distance back to the controller
+            # else send a large number
+            if abs(xr[0, 0]) < 0.3:
+                distance_to_dock = self.distance
+            else:
+                distance_to_dock = 100.0
+
+            return u, wrench, False, distance_to_dock
 
 
 if __name__ == "__main__":

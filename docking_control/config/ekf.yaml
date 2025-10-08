@@ -1,0 +1,74 @@
+# ekf.yaml: Configuration for the robot_localization EKF node (without magnetometer)
+
+# --- Frames ---
+# Set all frames to map_ned as requested.
+frequency: 50
+two_d_mode: false
+map_frame: map
+odom_frame: map_ned
+base_link_frame: base_link
+world_frame: map_ned
+
+# --- Odometry Input (odom0) ---
+# Fusing all pose (position + orientation) and twist (linear + angular velocity) data.
+# This is now the primary and only source for absolute pose.
+odom0: /docking_control/rov_odom
+odom0_config: [true,  true,  true,     # Fuse X, Y, Z position
+               false,  false,  false,     # Fuse Roll, Pitch, Yaw orientation
+               true,  true,  true,     # Fuse X, Y, Z linear velocity
+               false,  false,  false,     # Ignore angular velocity
+               false, false, false]   # Ignore linear acceleration
+odom0_differential: false
+odom0_queue_size: 10
+
+# --- IMU Input (imu0) for Angular Velocity ---
+# The IMU provides high-frequency angular velocity data to improve the
+# orientation estimate between odometry updates.
+imu0: /mavros/imu/data_raw
+imu0_config: [false, false, false,    # Ignore position
+              true, true, true,    # Fuse orientation
+              false, false, false,    # Ignore linear velocity
+              true,  true,  true,     # Fuse Roll, Pitch, Yaw angular velocity
+              false, false, false]   # Ignore linear acceleration
+imu0_differential: false
+imu0_remove_gravitational_acceleration: true
+imu0_queue_size: 10
+
+# --- Process Noise Covariance ---
+process_noise_covariance: [
+  1.0, 0,   0,   0,   0,   0,   0,     0,     0,     0,    0,    0,    0,    0,    0,
+  0,   1.0, 0,   0,   0,   0,   0,     0,     0,     0,    0,    0,    0,    0,    0,
+  0,   0,   1.5, 0,   0,   0,   0,     0,     0,     0,    0,    0,    0,    0,    0,
+  0,   0,   0,   0.5, 0,   0,   0,     0,     0,     0,    0,    0,    0,    0,    0,
+  0,   0,   0,   0,   0.5, 0,   0,     0,     0,     0,    0,    0,    0,    0,    0,
+  0,   0,   0,   0,   0,   0.9, 0,     0,     0,     0,    0,    0,    0,    0,    0,
+  0,   0,   0,   0,   0,   0,   0.8,   0,     0,     0,    0,    0,    0,    0,    0,
+  0,   0,   0,   0,   0,   0,   0,     0.8,   0,     0,    0,    0,    0,    0,    0,
+  0,   0,   0,   0,   0,   0,   0,     0,     1.2,   0,    0,    0,    0,    0,    0,
+  0,   0,   0,   0,   0,   0,   0,     0,     0,     0.5,  0,    0,    0,    0,    0,
+  0,   0,   0,   0,   0,   0,   0,     0,     0,     0,    0.5,  0,    0,    0,    0,
+  0,   0,   0,   0,   0,   0,   0,     0,     0,     0,    0,    0.9,  0,    0,    0,
+  0,   0,   0,   0,   0,   0,   0,     0,     0,     0,    0,    0,    0.01, 0,    0,
+  0,   0,   0,   0,   0,   0,   0,     0,     0,     0,    0,    0,    0,    0.01, 0,
+  0,   0,   0,   0,   0,   0,   0,   0,     0,     0,     0,    0,    0,    0,    0.02
+]
+
+# --- Initial State Covariance ---
+initial_estimate_covariance: [
+  1e-9, 0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
+  0,    1e-9, 0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
+  0,    0,    1e-9, 0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
+  0,    0,    0,    1e-9, 0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
+  0,    0,    0,    0,    1e-9, 0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
+  0,    0,    0,    0,    0,    1e-9, 0,    0,    0,    0,     0,     0,     0,    0,    0,
+  0,    0,    0,    0,    0,    0,    1.0,  0,    0,    0,     0,     0,     0,    0,    0,
+  0,    0,    0,    0,    0,    0,    0,    1.0,  0,    0,     0,     0,     0,    0,    0,
+  0,    0,    0,    0,    0,    0,    0,    0,    1.0,  0,     0,     0,     0,    0,    0,
+  0,    0,    0,    0,    0,    0,    0,    0,    0,    0.1,   0,     0,     0,    0,    0,
+  0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0.1,   0,     0,    0,    0,
+  0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0.1,   0,    0,    0,
+  0,    0,   0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     1e-9, 0,    0,
+  0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    1e-9, 0,
+  0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    1e-9
+]
+
