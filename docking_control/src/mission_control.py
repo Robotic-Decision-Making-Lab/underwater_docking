@@ -630,20 +630,7 @@ class BlueROV2:
                 mpc_op.data = [float(forces[i][0]) for i in range(8)]
                 self.mpc_output.publish(mpc_op)
 
-                # pwm = [self.neutral_pwm for _ in range(8)]
-
-                # pwm = self.calculate_pwm_from_thrust_curve(forces.flatten())
-
-                if distance_to_dock <= 0.25:
-                    # set pwm thrust to just move forward with full speed
-                    # forces[1:] *= 15.0
-                    pwm = self.calculate_pwm_from_thrust_curve(forces.flatten())
-                    pwm[0] = self.max_possible_pwm
-                    pwm[1] = self.max_possible_pwm
-                    pwm[2] = self.max_possible_pwm
-                    pwm[3] = self.max_possible_pwm
-                else:
-                    pwm = self.calculate_pwm_from_thrust_curve(forces.flatten())
+                pwm = self.calculate_pwm_from_thrust_curve(forces.flatten())
 
                 for i in range(len(pwm)):
                     if pwm[i] > self.deadzone_pwm[0] and pwm[i] < self.deadzone_pwm[1]:
@@ -708,9 +695,49 @@ class BlueROV2:
 
                 self.timestamp += self.mpc.dt
 
+            # Surge - Forward
+            # pwm = [1900, 1900, 1900, 1900, 1500, 1500, 1500, 1500]
+            # Surge - Back
+            # pwm = [1100, 1100, 1100, 1100, 1500, 1500, 1500, 1500]
+            # Sway - Right
+            # pwm = [1100, 1900, 1900, 1100, 1500, 1500, 1500, 1500]
+            # Sway - Left
+            # pwm = [1900, 1100, 1100, 1900, 1500, 1500, 1500, 1500]
+            # Heave - Down
+            # pwm = [1500, 1500, 1500, 1500, 1100, 1900, 1900, 1100]
+            # Heave - Up
+            # pwm = [1500, 1500, 1500, 1500, 1900, 1100, 1100, 1900]
+            # Roll - CCW
+            # pwm = [1500, 1500, 1500, 1500, 1900, 1900, 1100, 1100]
+            # Roll - CW
+            # pwm = [1500, 1500, 1500, 1500, 1100, 1100, 1900, 1900]
+            # Pitch - Nose Up
+            # pwm = [1500, 1500, 1500, 1500, 1900, 1100, 1900, 1100]
+            # Pitch - Nose Down
+            # pwm = [1500, 1500, 1500, 1500, 1100, 1900, 1100, 1900]
+            # Yaw - CW
+            # pwm = [1100, 1900, 1100, 1900, 1500, 1500, 1500, 1500]
+            # Yaw - CCW
+            # pwm = [1900, 1100, 1900, 1100, 1500, 1500, 1500, 1500]
+
+            # for i in range(len(pwm)):
+            #     if pwm[i] > self.deadzone_pwm[0] and pwm[i] < self.deadzone_pwm[1]:
+            #         pwm[i] = self.neutral_pwm
+
+            # for i in range(len(pwm)):
+            #     pwm[i] = max(min(pwm[i], self.max_possible_pwm), self.min_possible_pwm)
+
+            # override_pwm = [OverrideRCIn.CHAN_NOCHANGE for _ in range(18)]
+
+            # # Store pwm values in the override message between indices 8-15
+            # override_pwm[0:6] = pwm[0:6]
+            # override_pwm[14:16] = pwm[6:8]
+
+            # self.control_pub.publish(override_pwm)
+
         except Exception as e:
             rospy.logerr_throttle(
-                10, "[BlueROV2][auto_control] Error in MPC Computation" + str(e)
+                10, "[BlueROV2][auto_control] Error in MPC Computation " + str(e)
             )
             return
 

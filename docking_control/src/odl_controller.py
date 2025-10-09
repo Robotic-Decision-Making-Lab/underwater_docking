@@ -301,7 +301,6 @@ class ODL:
             # if xr is close to the dock, send the self.distance back to the controller
             # else send a large number
             if abs(xr[0, 0]) < 0.25:
-                wrench *= 20.0
                 distance_to_dock = self.distance
             else:
                 distance_to_dock = 100.0

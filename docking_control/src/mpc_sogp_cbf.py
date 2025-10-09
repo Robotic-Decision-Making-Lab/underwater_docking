@@ -114,6 +114,7 @@ class MPC:
         )
 
         self.previous_control = np.zeros((self.control_axes, 1))
+        self.scaling_factor = 20.0
 
         self.acados_ocp = AcadosOcp()
         self.acados_model = AcadosModel()
@@ -482,6 +483,19 @@ class MPC:
 
         wrench = self.acados_ocp_solver.get(0, "u").reshape(-1, 1)
         self.previous_control = wrench
+
+        # Apply scaling if close to the target
+        if abs(xr[0, 0]) < 0.25:
+            wrench *= self.scaling_factor
+            # Proportial scaling of wrench vector
+            ratios = np.full_like(wrench, np.inf, dtype=float)
+            with np.errstate(divide="ignore", invalid="ignore"):
+                max_mask = wrench > self.umax
+                min_mask = wrench < self.umin
+                ratios[max_mask] = (self.umax / wrench)[max_mask]
+                ratios[min_mask] = (self.umin / wrench)[min_mask]
+            min_ratio = min(np.min(ratios), 1.0)
+            wrench *= min_ratio
 
         u_next = evalf(mtimes(pinv(self.auv.tam), wrench)).full()
 
