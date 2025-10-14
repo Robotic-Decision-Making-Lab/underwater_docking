@@ -11,6 +11,7 @@
 /docking_control/x_nom
 /docking_control/gp_x_dot_true
 /docking_control/gp_x_dot_nom
+/docking_control/mpc_cost
 /joy
 /mavros/altitude
 /mavros/battery

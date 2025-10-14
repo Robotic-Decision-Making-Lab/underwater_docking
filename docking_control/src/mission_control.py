@@ -84,7 +84,7 @@ class BlueROV2:
         self.timestamp = 0.0
 
         self.filtered_gp_x_dot_true = np.zeros((12, 1))
-        self.ema_alpha= 0.4
+        self.ema_alpha= 0.1
 
         self.battery_voltage = None
 
@@ -192,6 +192,9 @@ class BlueROV2:
         )
         self.mpc_wrench_pub = rospy.Publisher(
             "/docking_control/mpc_wrench", WrenchStamped, queue_size=1
+        )
+        self.mpc_cost_pub = rospy.Publisher(
+            "/docking_control/mpc_cost", Float64, queue_size=1
         )
 
     def initialize_services(self):
@@ -624,10 +627,10 @@ class BlueROV2:
 
             mpc_time = rospy.Time().to_sec()
 
-            forces, self.wrench, distance_to_dock = self.mpc.run_mpc(
+            forces, self.wrench, distance_to_dock, cost = self.mpc.run_mpc(
                 x0, xr, self.gp_residual_pred
             )
-            if distance_to_dock < 0.1:
+            if distance_to_dock < 0.175:
                 msg = """
                 [BlueROV2][auto_control] ROV reached dock successfully!
                 Disarming now...
@@ -661,6 +664,10 @@ class BlueROV2:
                 mpc_op.layout.dim.append(dim)
                 mpc_op.data = [float(forces[i][0]) for i in range(8)]
                 self.mpc_output.publish(mpc_op)
+
+                mpc_cost = Float64()
+                mpc_cost.data = cost
+                self.mpc_cost_pub.publish(mpc_cost)
 
                 pwm = self.calculate_pwm_from_thrust_curve(forces.flatten())
 

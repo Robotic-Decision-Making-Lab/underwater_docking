@@ -278,7 +278,7 @@ class ODL:
             (((x0[3:6, :] - xr[3:6, :]) + np.pi) % (2 * np.pi)) - np.pi
         )
 
-        u, wrench, _ = self.mpc.run_mpc(x0, xr, current_gp_res_for_mpc)
+        u, wrench, cost = self.mpc.run_mpc(x0, xr, current_gp_res_for_mpc)
 
         # x_dot_sim = self.auv.compute_nonlinear_dynamics(x=x0, u=wrench)
         # x_sim = x0 + evalf(x_dot_sim).full() * self.dt
@@ -319,7 +319,7 @@ class ODL:
 
         self.time_id += 1
 
-        return u, wrench, distance_to_dock
+        return u, wrench, distance_to_dock, cost
 
 
 if __name__ == "__main__":

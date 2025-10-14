@@ -485,7 +485,7 @@ class MPC:
         self.previous_control = wrench
 
         # Apply scaling if close to the target
-        if abs(xr[0, 0]) < 0.25:
+        if abs(xr[0, 0]) < 0.20 and abs(x0[5, 0]) < np.radians(10):
             wrench *= self.scaling_factor
             # Proportial scaling of wrench vector
             ratios = np.full_like(wrench, np.inf, dtype=float)
