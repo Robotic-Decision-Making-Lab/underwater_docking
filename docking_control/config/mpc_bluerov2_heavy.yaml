@@ -6,14 +6,14 @@ full_body: True
 control_axes: 6
 
 cbf:
-  enabled: True
+  enabled: False
   penalty: 10000.0
   settling_time: 0.1
   type: tube # Options: sphere, tube, frustum
   specs:
     start_radius: 0.5
     end_radius: 0.1
-    radius: 0.05
+    radius: 0.5
 
 noises:
   # Process noise (how much we trust the physics model)
@@ -85,6 +85,18 @@ penalty:
       0.01   # Yaw Torque (Very cheap for fast, precise heading adjustments)
     ]
 
+  # R: [
+  #   # Force (Fx, Fy, Fz)
+  #   0.05,   # Fx
+  #   1.5,   # Fy
+  #   0.05,   # Fz
+
+  #   # Torque (Tx, Ty, Tz)
+  #   30.0,  # Roll Torque
+  #   30.0,  # Pitch Torque
+  #   2.0    # Yaw Torque
+  # ]
+
   R_pwm: 1e-4
 
 bounds:
@@ -113,6 +125,9 @@ bounds:
   # umax: [5.0, 5.0, 5.0, 5.0, 5.0, 5.0]
   umin: [-50.0, -50.0, -50.0, -50.0, -50.0, -50.0]
   umax: [50.0, 50.0, 50.0, 50.0, 50.0, 50.0]
+
+  # umin: [-50.0, -50.0, -50.0, -10.0, -10.0, -10.0]
+  # umax: [50.0, 50.0, 50.0, 10.0, 10.0, 10.0]
   # umin: [-100.0, -100.0, -100.0, -100.0, -100.0, -100.0]
   # umax: [100.0, 100.0, 100.0, 100.0, 100.0, 100.0]
 

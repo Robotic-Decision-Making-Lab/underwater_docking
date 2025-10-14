@@ -57,9 +57,13 @@ class BlueROV2:
         self.dock_odom = None
         self.xr = None
 
-        self.first_pose_flag = True
+        self.first_odom_flag = True
         self.previous_rov_pose = None
         self.rov_pose_sub_time = None
+
+        self.first_acc_flag = True
+        self.previous_odom = None
+        self.acc_sub_time = None
 
         self.first_fid_flag = True
         self.previous_fid_pose = None
@@ -73,10 +77,14 @@ class BlueROV2:
         self.altitude = 0.0
 
         self.gp_residual_pred = np.zeros((12, 1))
+        self.gp_x_dot_true = None
+        self.odom_for_gp = None
         self.wrench = np.zeros((6, 1))
         self.x_next_nominal = np.zeros((12, 1))
         self.timestamp = 0.0
-        self.prev_odom = np.zeros((12, 1))
+
+        self.filtered_gp_x_dot_true = np.zeros((12, 1))
+        self.ema_alpha= 0.4
 
         self.battery_voltage = None
 
@@ -169,6 +177,12 @@ class BlueROV2:
         )
         self.x_next_pub = rospy.Publisher(
             "/docking_control/x_next", Float32MultiArray, queue_size=1
+        )
+        self.gp_x_dot_true_pub = rospy.Publisher(
+            "/docking_control/gp_x_dot_true", Float32MultiArray, queue_size=1
+        )
+        self.gp_x_dot_nom_pub = rospy.Publisher(
+            "/docking_control/gp_x_dot_nom", Float32MultiArray, queue_size=1
         )
         self.rov_odom_pub = rospy.Publisher(
             "/docking_control/rov_odom", Odometry, queue_size=1
@@ -273,6 +287,25 @@ class BlueROV2:
             self.rov_odom[9, 0] = odom.twist.twist.angular.x
             self.rov_odom[10, 0] = odom.twist.twist.angular.y
             self.rov_odom[11, 0] = odom.twist.twist.angular.z
+
+            if self.first_acc_flag:
+                self.previous_odom = self.rov_odom
+                self.acc_sub_time = odom.header.stamp.to_sec()
+                self.first_acc_flag = False
+            else:
+                del_time = odom.header.stamp.to_sec() - self.acc_sub_time
+                if del_time > 1e-4: # Avoid division by zero
+                    rov_odom_diff = self.rov_odom - self.previous_odom
+                    rov_acc = rov_odom_diff / del_time
+
+                    # Apply Exponential Moving Average filter
+                    self.filtered_gp_x_dot_true = self.ema_alpha * rov_acc + \
+                                                (1 - self.ema_alpha) * self.filtered_gp_x_dot_true
+
+                    self.gp_x_dot_true = self.filtered_gp_x_dot_true # Use the filtered value
+
+                self.acc_sub_time = odom.header.stamp.to_sec()
+                self.previous_odom = self.rov_odom
         except Exception as e:
             rospy.logerr_throttle(
                 10, "[BlueROV2][rov_odom_cb] Not receiving ROV's Odometry: {}".format(e)
@@ -318,10 +351,10 @@ class BlueROV2:
             rov_pose_msg.pose.orientation.w = quat[3]
             self.rov_pose_pub.publish(rov_pose_msg)
 
-            if self.first_pose_flag:
+            if self.first_odom_flag:
                 self.rov_pose_sub_time = pose.header.stamp.to_sec()
                 self.previous_rov_pose = self.rov_pose
-                self.first_pose_flag = False
+                self.first_odom_flag = False
             else:
                 del_time = pose.header.stamp.to_sec() - self.rov_pose_sub_time
                 rov_pose_diff = self.rov_pose - self.previous_rov_pose
@@ -357,7 +390,6 @@ class BlueROV2:
                 rov_odom_msg.twist.twist.angular.z = rov_odom[11][0]
 
                 self.rov_odom_pub.publish(rov_odom_msg)
-            # print(self.rov_pose)
         except Exception as e:
             rospy.logerr_throttle(
                 10, "[BlueROV2][rov_pose_cb] Not receiving ROV's Position data: {}".format(e)
@@ -559,6 +591,7 @@ class BlueROV2:
             return
         else:
             x0 = deepcopy(self.rov_odom)
+            self.odom_for_gp = deepcopy(self.rov_odom)
 
         if self.xr is None:
             rospy.logerr_throttle(
@@ -568,9 +601,15 @@ class BlueROV2:
         else:
             xr = self.xr
 
+        if self.gp_x_dot_true is None:
+            rospy.logerr_throttle(
+                10, "[BlueROV2][auto_control] GP true x_dot not initialized"
+            )
+            return
+
         # xr = np.zeros((12, 1))
-        # xr[0, 0] = -2.0  # desired x position
-        # xr[2, 0] = -.35  # desired depth position
+        # xr[0, 0] = -2.5  # desired x position
+        # xr[2, 0] = 1.5
 
         try:
             # Publish the current state for debugging
@@ -583,19 +622,12 @@ class BlueROV2:
             x_curr.data = [float(x0[i][0]) for i in range(12)]
             self.x_curr_pub.publish(x_curr)
 
-            # if self.mpc.gp_enabled and self.mpc.sogp_models:
-            #     self.gp_residual_pred = self.mpc._update_and_predict_sogp(
-            #         self.prev_odom,
-            #         self.wrench,
-            #         x0,
-            #         self.x_next_nominal,
-            #         self.timestamp,
-            #     )
+            mpc_time = rospy.Time().to_sec()
 
-            forces, self.wrench, converge_flag, distance_to_dock = self.mpc.run_mpc(
+            forces, self.wrench, distance_to_dock = self.mpc.run_mpc(
                 x0, xr, self.gp_residual_pred
             )
-            if converge_flag:
+            if distance_to_dock < 0.1:
                 msg = """
                 [BlueROV2][auto_control] ROV reached dock successfully!
                 Disarming now...
@@ -653,14 +685,17 @@ class BlueROV2:
                         x0, self.wrench, complete_model=True
                     )
                     x_dot_nominal = evalf(x_dot_nom_c).full()
-                    self.x_next_nominal = x0 + x_dot_nominal * self.mpc.dt
+                    dt = rospy.Time().to_sec() - mpc_time
+                    self.x_next_nominal = x0 + x_dot_nominal * dt
+
+                    gp_x_dot_true = deepcopy(self.gp_x_dot_true)
 
                     self.gp_residual_pred = self.mpc._update_and_predict_sogp(
-                        self.prev_odom,
+                        self.odom_for_gp,
                         self.wrench,
-                        self.rov_odom,
-                        self.x_next_nominal,
-                        self.timestamp,
+                        gp_x_dot_true,
+                        x_dot_nominal,
+                        rospy.Time().to_sec(),
                     )
 
                 # Publish the x_nom for debugging
@@ -692,6 +727,30 @@ class BlueROV2:
                 gp_op.layout.dim.append(dim)
                 gp_op.data = [float(self.gp_residual_pred[i][0]) for i in range(12)]
                 self.gp_output_pub.publish(gp_op)
+
+                # Publish the true x_dot for debugging
+                gp_x_dot_true_msg = Float32MultiArray()
+                dim = MultiArrayDimension()
+                dim.label = "GP True x_dot"
+                dim.size = 12
+                dim.stride = 1
+                gp_x_dot_true_msg.layout.dim.append(dim)
+                gp_x_dot_true_msg.data = [
+                    float(gp_x_dot_true[i][0]) for i in range(12)
+                ]
+                self.gp_x_dot_true_pub.publish(gp_x_dot_true_msg)
+
+                # Publish the nominal x_dot for debugging
+                gp_x_dot_nom_msg = Float32MultiArray()
+                dim = MultiArrayDimension()
+                dim.label = "GP Nominal x_dot"
+                dim.size = 12
+                dim.stride = 1
+                gp_x_dot_nom_msg.layout.dim.append(dim)
+                gp_x_dot_nom_msg.data = [
+                    float(x_dot_nominal[i][0]) for i in range(12)
+                ]
+                self.gp_x_dot_nom_pub.publish(gp_x_dot_nom_msg)
 
                 self.timestamp += self.mpc.dt
 

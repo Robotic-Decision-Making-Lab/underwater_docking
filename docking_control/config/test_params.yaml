@@ -27,23 +27,26 @@ wec:
 algorithm: odl
 
 gp:
-  enabled: True
+  enabled: False
   kernel_type: PERIODIC # Options: RBF_ISO, PERIODIC, COMBINATION, MATERN32_ISO, MATERN52_ISO
   hyperparameters:
     length_scale: 0.75
     variance: 0.75
     noise_variance: 0.05
-    period: 1.5
+    # period: 1.5
+    # period: 1.7
     # period: 1.9
     # period: 2.1
-    # period: 2.3
+    period: 2.3
     periodic_length_scale: 1.0
     # periodic_variance: 0.0015
     # periodic_variance: 0.005625
-    periodic_variance: 0.0015625
+    # periodic_variance: 0.0015625
     # periodic_variance: 0.009025
+    periodic_variance: 0.050625
+    # periodic_variance: 0.0625
     # periodic_variance: 0.075625
-    periodic_noise_variance: 0.01
+    periodic_noise_variance: 0.8
   threshold: 0.05
   max_bvs: 300
   # Hyperparameter tuning with GPy

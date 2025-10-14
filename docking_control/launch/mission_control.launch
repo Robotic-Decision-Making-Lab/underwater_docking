@@ -13,6 +13,7 @@
   <arg name="joy_dev" default="/dev/input/js0"/>
   <arg name="log_output" default="screen"/>
   <arg name="log_images" default="false" />
+  <arg name="draw_sonar" default="true" />
   <arg name="robot_description_xacro" default="$(find docking_control)/model/bluerov2_heavy/config.xacro"/>
 
   <node pkg="mavros" type="mavros_node" name="mavros" required="true" clear_params="true" output="$(arg log_output)" launch-prefix="taskset -c 1">
@@ -81,6 +82,10 @@
   </node> -->
 
   <!-- <node pkg="sonar_odom" type="main" name="sonar_odom" output="$(arg log_output)" launch-prefix="taskset -c 9" /> -->
+
+  <include file="$(find oculus_sonar_driver)/launch/default_ros.launch">
+    <arg name="draw_sonar" value="$(arg draw_sonar)"/>
+  </include>
 
   <node pkg="rviz" type="rviz" name="rviz" args="-d $(find docking_control)/rviz/bluerov.rviz" />
 

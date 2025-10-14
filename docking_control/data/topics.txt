@@ -9,6 +9,8 @@
 /docking_control/x_curr
 /docking_control/x_next
 /docking_control/x_nom
+/docking_control/gp_x_dot_true
+/docking_control/gp_x_dot_nom
 /joy
 /mavros/altitude
 /mavros/battery

@@ -72,7 +72,7 @@ class ODL:
         self.comp_time = 0.0
         self.time_id = 0
         self.dt = self.mpc.dt
-        self.t_f = 3600.0
+        self.t_f = 360000.0
         self.t_span = np.arange(0.0, self.t_f, self.dt)
         self.mpc.reset()
 
@@ -266,77 +266,60 @@ class ODL:
             residual if self.gp_enabled else np.zeros_like(residual)
         )
 
-        if abs(xr[0, 0]) < 0.30:
-            xr[3:6, :] = 0.0
-            xr[9:12, :] = 0.0
+        # if abs(xr[0, 0]) < 0.30:
+        #     xr[3:6, :] = 0.0
+        #     xr[9:12, :] = 0.0
 
         process_t0 = time.perf_counter()
         self.distance = np.linalg.norm(x0[0:3, :] - xr[0:3, :])
-
-        # x0[3:6, :] = self.wrap_pi2negpi(x0[3:6, :])
-        # xr[5, :] += np.pi
-        # xr[3:6, :] = self.wrap_pi2negpi(xr[3:6, :])
-
-        # x0[6:12, :] = np.clip(
-        #     x0[6:12, 0], self.mpc.xmin[6:12], self.mpc.xmax[6:12]
-        # ).reshape(-1, 1)
 
         self.yaw_diff = abs((((x0[5, :] - xr[5, :]) + np.pi) % (2 * np.pi)) - np.pi)[0]
         self.ang_diff = np.linalg.norm(
             (((x0[3:6, :] - xr[3:6, :]) + np.pi) % (2 * np.pi)) - np.pi
         )
 
-        if self.distance <= self.tolerance and self.yaw_diff <= self.yaw_tolerance:
-            # if self.distance < self.tolerance and self.ang_diff < self.yaw_tolerance:
-            return np.zeros((8, 1)), np.zeros((6, 1)), True
+        u, wrench, _ = self.mpc.run_mpc(x0, xr, current_gp_res_for_mpc)
 
+        # x_dot_sim = self.auv.compute_nonlinear_dynamics(x=x0, u=wrench)
+        # x_sim = x0 + evalf(x_dot_sim).full() * self.dt
+
+        # if xr is close to the dock, send the self.distance back to the controller
+        # else send a large number
+        if abs(xr[0, 0]) < 0.25:
+            distance_to_dock = self.distance
         else:
-            # x0[3:5, :] = 0.0
-            # x0[9:11, :] = 0.0
-            u, wrench, _ = self.mpc.run_mpc(x0, xr, current_gp_res_for_mpc)
+            distance_to_dock = 100.0
 
-            # x_dot_sim = self.auv.compute_nonlinear_dynamics(x=x0, u=wrench)
-            # x_sim = x0 + evalf(x_dot_sim).full() * self.dt
+        self.comp_time = time.perf_counter() - process_t0
 
-            # if xr is close to the dock, send the self.distance back to the controller
-            # else send a large number
-            if abs(xr[0, 0]) < 0.25:
-                distance_to_dock = self.distance
-            else:
-                distance_to_dock = 100.0
+        print(f"T = {round(self.t_span[self.time_id],3)}s")
+        print(f"Computation Time = {round(self.comp_time,3)}s")
+        print("----------------------------------------------")
+        print(f"MPC Control Input: {np.round(u, 2).T}")
+        print("----------------------------------------------")
+        print(f"Axes Forces: {np.round(wrench, 2).T}")
+        print("----------------------------------------------")
+        print(f"GP Residual: {np.round(residual, 3).T}")
+        print("----------------------------------------------")
+        print(f"Initial Vehicle Pose: {np.round(x0[0:6], 3).T}")
+        print(f"Initial Vehicle Velocity: {np.round(x0[6:12], 3).T}")
+        # print("----------------------------------------------")
+        # print(f"Sim Vehicle Pose: {np.round(x_sim[0:6], 3).T}")
+        # print(f"Sim Vehicle Velocity: {np.round(x_sim[6:12], 3).T}")
+        print("----------------------------------------------")
+        print(f"Dock Pose: {np.round(xr[0:6], 3).T}")
+        print(f"Dock Velocity: {np.round(xr[6:12], 3).T}")
+        print("----------------------------------------------")
+        print(f"Path length: {np.round(self.path_length, 3)}")
+        print(f"(Dock-AUV) Distance to go: {np.round(self.distance, 3)}")
+        print(f"(Dock-AUV) Yaw difference: {np.round(self.yaw_diff, 3)}")
+        print(f"(Dock-AUV) Angle difference: {np.round(self.ang_diff, 3)}")
+        print("----------------------------------------------")
+        # print("")
 
-            self.comp_time = time.perf_counter() - process_t0
+        self.time_id += 1
 
-            print(f"T = {round(self.t_span[self.time_id],3)}s")
-            print(f"Computation Time = {round(self.comp_time,3)}s")
-            print("----------------------------------------------")
-            print(f"MPC Control Input: {np.round(u, 2).T}")
-            print("----------------------------------------------")
-            print(f"Axes Forces: {np.round(wrench, 2).T}")
-            print("----------------------------------------------")
-            print(f"GP Residual: {np.round(residual, 3).T}")
-            print("----------------------------------------------")
-            print(f"Initial Vehicle Pose: {np.round(x0[0:6], 3).T}")
-            print(f"Initial Vehicle Velocity: {np.round(x0[6:12], 3).T}")
-            # print("----------------------------------------------")
-            # print(f"Sim Vehicle Pose: {np.round(x_sim[0:6], 3).T}")
-            # print(f"Sim Vehicle Velocity: {np.round(x_sim[6:12], 3).T}")
-            print("----------------------------------------------")
-            print(f"Dock Pose: {np.round(xr[0:6], 3).T}")
-            print(f"Dock Velocity: {np.round(xr[6:12], 3).T}")
-            print("----------------------------------------------")
-            print(f"Path length: {np.round(self.path_length, 3)}")
-            print(f"(Dock-AUV) Distance to go: {np.round(self.distance, 3)}")
-            print(f"(Dock-AUV) Yaw difference: {np.round(self.yaw_diff, 3)}")
-            print(f"(Dock-AUV) Angle difference: {np.round(self.ang_diff, 3)}")
-            print("----------------------------------------------")
-            # print("")
-
-            self.time_id += 1
-
-
-
-            return u, wrench, False, distance_to_dock
+        return u, wrench, distance_to_dock
 
 
 if __name__ == "__main__":
