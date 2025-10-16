@@ -60,6 +60,9 @@
   <node pkg="tf2_ros" type="static_transform_publisher" name="marker7_to_marker15_tf_broadcaster" args="0.807 0.036 0 0 0 0  marker_7 marker_15" />
   <node pkg="tf2_ros" type="static_transform_publisher" name="marker14_to_marker7_tf_broadcaster" args="-0.027 -0.655 0 0 0 0  marker_14 marker_7" />
 
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker1_to_dock_tf_broadcaster" args="0 0 0 0 1.571 -1.571  marker_1 dock" /> -->
+
+
   <param name="robot_description" command="$(find xacro)/xacro $(arg robot_description_xacro)"/>
   <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" />
 

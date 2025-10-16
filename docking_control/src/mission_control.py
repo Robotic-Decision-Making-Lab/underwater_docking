@@ -611,8 +611,8 @@ class BlueROV2:
             return
 
         # xr = np.zeros((12, 1))
-        # xr[0, 0] = -2.5  # desired x position
-        # xr[2, 0] = 1.5
+        # xr[0, 0] = -1.0  # desired x position
+        # xr[2, 0] = 0.5  # desired z position
 
         try:
             # Publish the current state for debugging
@@ -705,59 +705,59 @@ class BlueROV2:
                         rospy.Time().to_sec(),
                     )
 
-                # Publish the x_nom for debugging
-                x_nom = Float32MultiArray()
-                dim = MultiArrayDimension()
-                dim.label = "X Next Nominal"
-                dim.size = 12
-                dim.stride = 1
-                x_nom.layout.dim.append(dim)
-                x_nom.data = [float(self.x_next_nominal[i][0]) for i in range(12)]
-                self.x_nom_pub.publish(x_nom)
+                    # Publish the x_nom for debugging
+                    x_nom = Float32MultiArray()
+                    dim = MultiArrayDimension()
+                    dim.label = "X Next Nominal"
+                    dim.size = 12
+                    dim.stride = 1
+                    x_nom.layout.dim.append(dim)
+                    x_nom.data = [float(self.x_next_nominal[i][0]) for i in range(12)]
+                    self.x_nom_pub.publish(x_nom)
 
-                # Publish the true next odom for debugging
-                x_next = Float32MultiArray()
-                dim = MultiArrayDimension()
-                dim.label = "X Next True"
-                dim.size = 12
-                dim.stride = 1
-                x_next.layout.dim.append(dim)
-                x_next.data = [float(self.rov_odom[i][0]) for i in range(12)]
-                self.x_next_pub.publish(x_next)
+                    # Publish the true next odom for debugging
+                    x_next = Float32MultiArray()
+                    dim = MultiArrayDimension()
+                    dim.label = "X Next True"
+                    dim.size = 12
+                    dim.stride = 1
+                    x_next.layout.dim.append(dim)
+                    x_next.data = [float(self.rov_odom[i][0]) for i in range(12)]
+                    self.x_next_pub.publish(x_next)
 
-                # Publish the gp residual prediction for debugging
-                gp_op = Float32MultiArray()
-                dim = MultiArrayDimension()
-                dim.label = "GP Residual Prediction"
-                dim.size = 12
-                dim.stride = 1
-                gp_op.layout.dim.append(dim)
-                gp_op.data = [float(self.gp_residual_pred[i][0]) for i in range(12)]
-                self.gp_output_pub.publish(gp_op)
+                    # Publish the gp residual prediction for debugging
+                    gp_op = Float32MultiArray()
+                    dim = MultiArrayDimension()
+                    dim.label = "GP Residual Prediction"
+                    dim.size = 12
+                    dim.stride = 1
+                    gp_op.layout.dim.append(dim)
+                    gp_op.data = [float(self.gp_residual_pred[i][0]) for i in range(12)]
+                    self.gp_output_pub.publish(gp_op)
 
-                # Publish the true x_dot for debugging
-                gp_x_dot_true_msg = Float32MultiArray()
-                dim = MultiArrayDimension()
-                dim.label = "GP True x_dot"
-                dim.size = 12
-                dim.stride = 1
-                gp_x_dot_true_msg.layout.dim.append(dim)
-                gp_x_dot_true_msg.data = [
-                    float(gp_x_dot_true[i][0]) for i in range(12)
-                ]
-                self.gp_x_dot_true_pub.publish(gp_x_dot_true_msg)
+                    # Publish the true x_dot for debugging
+                    gp_x_dot_true_msg = Float32MultiArray()
+                    dim = MultiArrayDimension()
+                    dim.label = "GP True x_dot"
+                    dim.size = 12
+                    dim.stride = 1
+                    gp_x_dot_true_msg.layout.dim.append(dim)
+                    gp_x_dot_true_msg.data = [
+                        float(gp_x_dot_true[i][0]) for i in range(12)
+                    ]
+                    self.gp_x_dot_true_pub.publish(gp_x_dot_true_msg)
 
-                # Publish the nominal x_dot for debugging
-                gp_x_dot_nom_msg = Float32MultiArray()
-                dim = MultiArrayDimension()
-                dim.label = "GP Nominal x_dot"
-                dim.size = 12
-                dim.stride = 1
-                gp_x_dot_nom_msg.layout.dim.append(dim)
-                gp_x_dot_nom_msg.data = [
-                    float(x_dot_nominal[i][0]) for i in range(12)
-                ]
-                self.gp_x_dot_nom_pub.publish(gp_x_dot_nom_msg)
+                    # Publish the nominal x_dot for debugging
+                    gp_x_dot_nom_msg = Float32MultiArray()
+                    dim = MultiArrayDimension()
+                    dim.label = "GP Nominal x_dot"
+                    dim.size = 12
+                    dim.stride = 1
+                    gp_x_dot_nom_msg.layout.dim.append(dim)
+                    gp_x_dot_nom_msg.data = [
+                        float(x_dot_nominal[i][0]) for i in range(12)
+                    ]
+                    self.gp_x_dot_nom_pub.publish(gp_x_dot_nom_msg)
 
                 self.timestamp += self.mpc.dt
 
