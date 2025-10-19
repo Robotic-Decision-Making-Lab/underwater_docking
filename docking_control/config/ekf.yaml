@@ -14,7 +14,7 @@ world_frame: map_ned
 # This is now the primary and only source for absolute pose.
 odom0: /docking_control/rov_odom
 odom0_config: [true,  true,  true,     # Fuse X, Y, Z position
-               false,  false,  false,     # Fuse Roll, Pitch, Yaw orientation
+               true,  true,  true,     # Fuse Roll, Pitch, Yaw orientation
                true,  true,  true,     # Fuse X, Y, Z linear velocity
                false,  false,  false,     # Ignore angular velocity
                false, false, false]   # Ignore linear acceleration

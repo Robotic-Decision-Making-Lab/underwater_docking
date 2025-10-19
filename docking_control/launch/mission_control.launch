@@ -61,6 +61,9 @@
   <node pkg="tf2_ros" type="static_transform_publisher" name="marker14_to_marker7_tf_broadcaster" args="-0.027 -0.655 0 0 0 0  marker_14 marker_7" />
 
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker1_to_dock_tf_broadcaster" args="0 0 0 0 1.571 -1.571  marker_1 dock" /> -->
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker8_to_dock_tf_broadcaster" args="0 0 0 0 1.571 -1.571  marker_8 dock" /> -->
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="marker13_to_dock_tf_broadcaster" args="0 0 0 0 1.571 -1.571  marker_13 dock" />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="marker8_to_marker13_tf_broadcaster" args="0 -0.385 0 0 0 0  marker_8 marker_13" /> -->
 
 
   <param name="robot_description" command="$(find xacro)/xacro $(arg robot_description_xacro)"/>
@@ -86,9 +89,9 @@
 
   <!-- <node pkg="sonar_odom" type="main" name="sonar_odom" output="$(arg log_output)" launch-prefix="taskset -c 9" /> -->
 
-  <include file="$(find oculus_sonar_driver)/launch/default_ros.launch">
+  <!-- <include file="$(find oculus_sonar_driver)/launch/default_ros.launch">
     <arg name="draw_sonar" value="$(arg draw_sonar)"/>
-  </include>
+  </include> -->
 
   <node pkg="rviz" type="rviz" name="rviz" args="-d $(find docking_control)/rviz/bluerov.rviz" />
 

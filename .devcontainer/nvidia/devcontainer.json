@@ -17,7 +17,7 @@
     "--gpus=all"
   ],
   "mounts": [
-    "type=bind,source=/media/darth/rakesh/rosbags,target=/home/ros/ws_dock/src/underwater_docking/docking_control/data/bag_files"
+    "type=bind,source=/media/darth/HINSDALE/2025/rosbags,target=/home/ros/ws_dock/src/underwater_docking/docking_control/data/bag_files"
   ],
   "containerEnv": {
     "DISPLAY": "${localEnv:DISPLAY}",

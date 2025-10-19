@@ -7,13 +7,13 @@ control_axes: 6
 
 cbf:
   enabled: True
-  penalty: 10000.0
-  settling_time: 0.1
+  penalty: 100000.0
+  settling_time: 0.01
   type: tube # Options: sphere, tube, frustum
   specs:
     start_radius: 0.5
     end_radius: 0.1
-    radius: 0.5
+    radius: 0.15
 
 noises:
   # Process noise (how much we trust the physics model)
@@ -87,13 +87,13 @@ penalty:
 
   R: [
       # Force (Fx, Fy, Fz)
-      0.05,  # Fx (Surge): Moderately expensive to encourage smooth acceleration.
+      0.075,  # Fx (Surge): Moderately expensive to encourage smooth acceleration.
       0.5,  # Fy (Sway): Most expensive force, as lateral motion is less efficient.
       0.05,  # Fz (Heave): Less expensive than surge/sway for responsive depth control.
 
       # Torque (Tx, Ty, Tz)
-      50.0,   # Tx (Roll): Very expensive to maintain stability.
-      50.0,   # Ty (Pitch): Very expensive to maintain stability.
+      100.0,   # Tx (Roll): Very expensive to maintain stability.
+      100.0,   # Ty (Pitch): Very expensive to maintain stability.
       5.0    # Tz (Yaw): Significantly more expensive to prevent jerky, twitchy turns.
     ]
 

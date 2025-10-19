@@ -84,7 +84,7 @@ class BlueROV2:
         self.timestamp = 0.0
 
         self.filtered_gp_x_dot_true = np.zeros((12, 1))
-        self.ema_alpha= 0.1
+        self.ema_alpha = 0.4
 
         self.battery_voltage = None
 
@@ -185,7 +185,7 @@ class BlueROV2:
             "/docking_control/gp_x_dot_nom", Float32MultiArray, queue_size=1
         )
         self.rov_odom_pub = rospy.Publisher(
-            "/docking_control/rov_odom", Odometry, queue_size=1
+            "/odometry/filtered", Odometry, queue_size=1
         )
         self.rov_pose_pub = rospy.Publisher(
             "/docking_control/rov_pose", PoseStamped, queue_size=1
@@ -610,9 +610,9 @@ class BlueROV2:
             )
             return
 
-        # xr = np.zeros((12, 1))
-        # xr[0, 0] = -1.0  # desired x position
-        # xr[2, 0] = 0.5  # desired z position
+        xr = np.zeros((12, 1))
+        xr[0, 0] = -1.75  # desired x position
+        xr[2, 0] = 1.5  # desired z position
 
         try:
             # Publish the current state for debugging
