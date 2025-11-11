@@ -474,14 +474,14 @@ class MPC:
         x0 = x[0:12, :]
         N = self.horizon
 
-        self.acados_ocp.model.x.shape[0]
-        nu = self.acados_ocp.model.u.shape[0]
+        # nx = self.acados_ocp.model.x.shape[0]
+        # nu = self.acados_ocp.model.u.shape[0]
 
         # set initial state constraint
         self.acados_ocp_solver.set(0, "lbx", x0)
         self.acados_ocp_solver.set(0, "ubx", x0)
 
-        ur = np.zeros((nu, 1))
+        # ur = np.zeros((nu, 1))
         p = np.vstack((xr, residual, self.previous_control))
 
         # Set the reference for the path cost

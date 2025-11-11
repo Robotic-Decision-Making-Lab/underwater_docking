@@ -218,7 +218,9 @@ class BlueROV2:
         try:
             self.altitude = -data.data
         except Exception as e:
-            rospy.logerr(f"[MissionControl][altitude_callback] Altitude callback error: {e}")
+            rospy.logerr(
+                f"[MissionControl][altitude_callback] Altitude callback error: {e}"
+            )
 
     def waypoint_cb(self, msg: PoseStamped):
         """Callback function for waypoint updates
@@ -276,10 +278,12 @@ class BlueROV2:
             self.rov_odom[1, 0] = odom.pose.pose.position.y
             self.rov_odom[2, 0] = odom.pose.pose.position.z
             euler = tf.transformations.euler_from_quaternion(
-                [odom.pose.pose.orientation.x,
-                odom.pose.pose.orientation.y,
-                odom.pose.pose.orientation.z,
-                odom.pose.pose.orientation.w]
+                [
+                    odom.pose.pose.orientation.x,
+                    odom.pose.pose.orientation.y,
+                    odom.pose.pose.orientation.z,
+                    odom.pose.pose.orientation.w,
+                ]
             )
             self.rov_odom[3, 0] = euler[0]
             self.rov_odom[4, 0] = euler[1]
@@ -297,15 +301,19 @@ class BlueROV2:
                 self.first_acc_flag = False
             else:
                 del_time = odom.header.stamp.to_sec() - self.acc_sub_time
-                if del_time > 1e-4: # Avoid division by zero
+                if del_time > 1e-4:  # Avoid division by zero
                     rov_odom_diff = self.rov_odom - self.previous_odom
                     rov_acc = rov_odom_diff / del_time
 
                     # Apply Exponential Moving Average filter
-                    self.filtered_gp_x_dot_true = self.ema_alpha * rov_acc + \
-                                                (1 - self.ema_alpha) * self.filtered_gp_x_dot_true
+                    self.filtered_gp_x_dot_true = (
+                        self.ema_alpha * rov_acc
+                        + (1 - self.ema_alpha) * self.filtered_gp_x_dot_true
+                    )
 
-                    self.gp_x_dot_true = self.filtered_gp_x_dot_true # Use the filtered value
+                    self.gp_x_dot_true = (
+                        self.filtered_gp_x_dot_true
+                    )  # Use the filtered value
 
                 self.acc_sub_time = odom.header.stamp.to_sec()
                 self.previous_odom = self.rov_odom
@@ -334,7 +342,7 @@ class BlueROV2:
             self.rov_pose[0][0] = -pose.pose.position.x
             self.rov_pose[1][0] = pose.pose.position.y
             # self.rov_pose[2][0] = pose.pose.position.z # relative depth
-            self.rov_pose[2][0] = self.altitude # absolute depth
+            self.rov_pose[2][0] = self.altitude  # absolute depth
             self.rov_pose[3][0] = -roll
             self.rov_pose[4][0] = pitch
             self.rov_pose[5][0] = yaw
@@ -395,7 +403,10 @@ class BlueROV2:
                 self.rov_odom_pub.publish(rov_odom_msg)
         except Exception as e:
             rospy.logerr_throttle(
-                10, "[BlueROV2][rov_pose_cb] Not receiving ROV's Position data: {}".format(e)
+                10,
+                "[BlueROV2][rov_pose_cb] Not receiving ROV's Position data: {}".format(
+                    e
+                ),
             )
 
     def store_sub_data(self, data, key):
@@ -413,7 +424,7 @@ class BlueROV2:
             )
 
     def battery_cb(self, battery):
-        """Store battery volatage
+        """Store battery voltage
 
         Args:
             battery: _description_
@@ -524,7 +535,7 @@ class BlueROV2:
         # set autonomous or manual control (manual control default)
         # if not self.battery_voltage:
         #     rospy.logerr_throttle(
-        #         10, "[BlueROV2][controller] No battery voltage data. Cannot control ROV!"
+        #         10, "[BlueROV2][controller] No battery data. Can't control ROV!"
         #     )
         #     return
         # elif self.battery_voltage < 14.0:
@@ -609,10 +620,6 @@ class BlueROV2:
                 10, "[BlueROV2][auto_control] GP true x_dot not initialized"
             )
             return
-
-        xr = np.zeros((12, 1))
-        xr[0, 0] = -1.75  # desired x position
-        xr[2, 0] = 1.5  # desired z position
 
         try:
             # Publish the current state for debugging
@@ -760,46 +767,6 @@ class BlueROV2:
                     self.gp_x_dot_nom_pub.publish(gp_x_dot_nom_msg)
 
                 self.timestamp += self.mpc.dt
-
-            # Surge - Forward
-            # pwm = [1900, 1900, 1900, 1900, 1500, 1500, 1500, 1500]
-            # Surge - Back
-            # pwm = [1100, 1100, 1100, 1100, 1500, 1500, 1500, 1500]
-            # Sway - Right
-            # pwm = [1100, 1900, 1900, 1100, 1500, 1500, 1500, 1500]
-            # Sway - Left
-            # pwm = [1900, 1100, 1100, 1900, 1500, 1500, 1500, 1500]
-            # Heave - Down
-            # pwm = [1500, 1500, 1500, 1500, 1100, 1900, 1900, 1100]
-            # Heave - Up
-            # pwm = [1500, 1500, 1500, 1500, 1900, 1100, 1100, 1900]
-            # Roll - CCW
-            # pwm = [1500, 1500, 1500, 1500, 1900, 1900, 1100, 1100]
-            # Roll - CW
-            # pwm = [1500, 1500, 1500, 1500, 1100, 1100, 1900, 1900]
-            # Pitch - Nose Up
-            # pwm = [1500, 1500, 1500, 1500, 1900, 1100, 1900, 1100]
-            # Pitch - Nose Down
-            # pwm = [1500, 1500, 1500, 1500, 1100, 1900, 1100, 1900]
-            # Yaw - CW
-            # pwm = [1100, 1900, 1100, 1900, 1500, 1500, 1500, 1500]
-            # Yaw - CCW
-            # pwm = [1900, 1100, 1900, 1100, 1500, 1500, 1500, 1500]
-
-            # for i in range(len(pwm)):
-            #     if pwm[i] > self.deadzone_pwm[0] and pwm[i] < self.deadzone_pwm[1]:
-            #         pwm[i] = self.neutral_pwm
-
-            # for i in range(len(pwm)):
-            #     pwm[i] = max(min(pwm[i], self.max_possible_pwm), self.min_possible_pwm)
-
-            # override_pwm = [OverrideRCIn.CHAN_NOCHANGE for _ in range(18)]
-
-            # # Store pwm values in the override message between indices 8-15
-            # override_pwm[0:6] = pwm[0:6]
-            # override_pwm[14:16] = pwm[6:8]
-
-            # self.control_pub.publish(override_pwm)
 
         except Exception as e:
             rospy.logerr_throttle(
