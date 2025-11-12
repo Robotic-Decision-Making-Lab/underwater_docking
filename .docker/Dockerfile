@@ -144,12 +144,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV USER_WORKSPACE=/home/$USERNAME/ws_dock
 WORKDIR $USER_WORKSPACE
 
-# Install Gazebo and RViz
+# Install RViz
 RUN sudo apt-get update \
     && sudo apt-get -q -y upgrade \
-    && curl -sSL http://get.gazebosim.org | sh \
     && sudo apt-get -q install --no-install-recommends -y \
-    ros-$ROS_DISTRO-gazebo* \
     ros-$ROS_DISTRO-rviz \
     && sudo apt-get autoremove -y \
     && sudo apt-get clean -y \
